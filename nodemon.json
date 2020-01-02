@@ -1,0 +1,8 @@
+{
+  "ignore": ["dist/*"],
+  "env": {
+    "NODE_ENV": "development",
+    "BABEL_DISABLE_CACHE": 1
+  },
+  "ext": "ts, css"
+}

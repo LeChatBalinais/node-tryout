@@ -1,0 +1,9 @@
+{
+  "files.eol": "\n",
+  "prettier.singleQuote": true,
+  "editor.formatOnSave": true,
+  "eslint.validate": ["typescript", "javascript"],
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "workbench.editor.enablePreview": false,
+  "typescript.validate.enable": false
+}

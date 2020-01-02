@@ -1,0 +1,12 @@
+{
+  "name": "NodeTryout",
+  "dockerFile": "Dockerfile",
+  "appPort": 7000,
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "2gua.rainbow-brackets",
+    "ms-vsliveshare.vsliveshare",
+    "esbenp.prettier-vscode"
+  ],
+  "postCreateCommand": "yarn install"
+}

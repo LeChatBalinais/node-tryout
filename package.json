@@ -1,0 +1,37 @@
+{
+  "name": "jeanpaul",
+  "version": "0.0.1",
+  "description": "server example",
+  "dependencies": {},
+  "scripts": {
+    "start": "concurrently --kill-others --names \"tsc,node\" -c \"blue,green\" \"yarn run type-check:watch\"  \"yarn nodemon --verbose --exec babel-node --extensions \".ts\" src/app.ts\"",
+    "type-check": "yarn tsc --noEmit",
+    "type-check:watch": "yarn run type-check --pretty --watch --preserveWatchOutput",
+    "serve": "node ./dist/app.js",
+    "build": "yarn run clear && yarn run build:types && yarn run build:js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "babel ./src --out-dir dist --extensions \".ts\" --source-maps inline",
+    "clear": "rm -rf ./dist"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
+    "@babel/preset-typescript": "^7.3.3",
+    "@types/node": "^13.1.2",
+    "@typescript-eslint/eslint-plugin": "^2.14.0",
+    "@typescript-eslint/parser": "^2.14.0",
+    "babel-eslint": "^10.0.1",
+    "concurrently": "^5.0.2",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-import": "^2.17.1",
+    "eslint-plugin-prettier": "^3.0.1",
+    "nodemon": "^2.0.2",
+    "typescript": "^3.4.3"
+  }
+}
