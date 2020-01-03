@@ -2,7 +2,9 @@
   "name": "jeanpaul",
   "version": "0.0.1",
   "description": "server example",
-  "dependencies": {},
+  "dependencies": {
+    "ramda": "^0.26.1"
+  },
   "scripts": {
     "start": "concurrently --kill-others --names \"tsc,node\" -c \"blue,green\" \"yarn run type-check:watch\"  \"yarn nodemon --verbose --exec babel-node --extensions \".ts\" src/app.ts\"",
     "type-check": "yarn tsc --noEmit",
@@ -22,6 +24,7 @@
     "@babel/preset-env": "^7.4.3",
     "@babel/preset-typescript": "^7.3.3",
     "@types/node": "^13.1.2",
+    "@types/ramda": "types/npm-ramda#dist",
     "@typescript-eslint/eslint-plugin": "^2.14.0",
     "@typescript-eslint/parser": "^2.14.0",
     "babel-eslint": "^10.0.1",
