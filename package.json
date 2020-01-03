@@ -2,7 +2,9 @@
   "name": "jeanpaul",
   "version": "0.0.1",
   "description": "server example",
-  "dependencies": {},
+  "dependencies": {
+    "immer": "^5.1.0"
+  },
   "scripts": {
     "start": "concurrently --kill-others --names \"tsc,node\" -c \"blue,green\" \"yarn run type-check:watch\"  \"yarn nodemon --verbose --exec babel-node --extensions \".ts\" src/app.ts\"",
     "type-check": "yarn tsc --noEmit",
