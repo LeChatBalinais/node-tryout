@@ -7,7 +7,7 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:import/typescript"
   ],
-  "plugins": ["prettier", "@typescript-eslint", "import"],
+  "plugins": ["prettier", "@typescript-eslint", "import", "jest"],
   "parserOptions": {
     "ecmaVersion": 2018,
     "sourceType": "module",
@@ -16,10 +16,19 @@
   "parser": "@typescript-eslint/parser",
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "jest/globals": true
   },
   "rules": {
-    "linebreak-style": "off"
+    "linebreak-style": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
+    ]
   },
   "settings": {
     "import/extensions": [".js", ".ts"],
