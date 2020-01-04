@@ -19,7 +19,15 @@
     "node": true
   },
   "rules": {
-    "linebreak-style": "off"
+    "linebreak-style": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
+    ]
   },
   "settings": {
     "import/extensions": [".js", ".ts"],
