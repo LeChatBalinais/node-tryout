@@ -1,4 +1,4 @@
-import { seriesOfGetters, getter, setter } from './lens';
+import { setter, getter, setterSeries, lens } from './lens';
 
 const ds = { x: { y: { z: { k: [{ l: [1, 3] }] } } } };
 
@@ -16,32 +16,20 @@ const dsa = [3, 4, 5];
 const setOne = setter('x')<number>();
 const setTwo = setter(0)<number>();
 
+const getOne = getter('x')<number>();
+const getTwo = getter(0)<number>();
+
+const lensOne = lens(getOne, setOne);
+const lensTwo = lens(getTwo, setTwo);
+
+console.log(lensOne(sd));
+console.log(lensOne(sd, 6));
+
+console.log(lensTwo(dsa));
+console.log(lensTwo(dsa, 9));
+
 console.log(setOne(sd, 4));
 console.log(setTwo(dsa, 10));
-
-const getOne = getter('x')<{ y: { z: { k: { l: number[] }[] } } }>();
-const getTwo = getter('y')<{ z: { k: { l: number[] }[] } }>();
-const getThree = getter('z')<{ k: { l: number[] }[] }>();
-const getFour = getter('k')<{ l: number[] }[]>();
-const getFive = getter(0)<{ l: number[] }>();
-const getSix = getter('l')<number[]>();
-
-const getZofYofX = seriesOfGetters(
-  getOne,
-  getTwo,
-  getThree,
-  getFour,
-  getFive,
-  getSix
-);
-
-console.log(getZofYofX(ds));
-
-const getZO = getter('i')<number>();
-const getZN = getter(1)<number>();
-
-getZO({ i: 3, k: 3 });
-getZN([1, 32, 43]);
 
 const k: {
   m: {
@@ -49,17 +37,39 @@ const k: {
   };
 } = { m: { ds: 3 } };
 
-const getM = getter('m')<{
-  [ID: string]: number;
-}>();
-
-const getKN = getter('ds')<
+const setDs = setter('ds')<
   number,
   {
     [ID: string]: number;
   }
 >();
 
-const getMKN = seriesOfGetters(getM, getKN);
+const getDs = getter('ds')<
+  number,
+  {
+    [ID: string]: number;
+  }
+>();
 
-getMKN(k);
+const lensDs = lens(getDs, setDs);
+
+console.log(lensDs(k.m));
+
+console.log(lensDs(k.m, 9));
+
+const getM = getter('m')<{
+  [ID: string]: number;
+}>();
+
+const setM = setter('m')<{
+  [ID: string]: number;
+}>();
+
+const lensM = lens(getM, setM);
+
+console.log(lensM(k));
+console.log(lensM(k, { bs: 0 }));
+
+// const setXX = setterSeries([setM, setDs], [getM]);
+
+// setXX(k, 9);

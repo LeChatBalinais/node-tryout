@@ -9,23 +9,22 @@ type Target<
   ? V[]
   : any;
 
-type Setter<V, PropertyName extends string | number> = <
-  T extends Target<V, PropertyName>
->(
-  t: T,
-  v: V
-) => T;
+type Setter<
+  V,
+  PropertyName extends string | number,
+  R = Target<V, PropertyName>
+> = <T extends R>(t: T, v: V) => T;
 
 export function setter<PropertyName extends string>(
   propName: PropertyName
-): <V>() => Setter<V, PropertyName>;
+): <V, R = Target<V, PropertyName>>() => Setter<V, PropertyName, R>;
 
 export function setter<PropertyName extends number>(
   propName: PropertyName
-): <V>() => Setter<V, PropertyName>;
+): <V, R = Target<V, PropertyName>>() => Setter<V, PropertyName, R>;
 
 export function setter(propName: any): <V>() => Setter<V, any> {
-  return <V>() => (t: any, v: V): any => {
+  return <V, R = any>() => (t: any, v: V): any => {
     if (Array.isArray(t))
       return [...t.slice(0, propName), v, ...t.slice(propName + 1)];
 
@@ -166,12 +165,15 @@ export function seriesOfGetters<V1>(...getters: any[]): (t: any) => V1 {
 
 // Series of Setters
 
-// export function setterSeries<
-//   V1,
-//   P1 extends string | number,
-//   V2 extends Target<V1, P1>,
-//   P2 extends string | number
-// >(s1: Setter<V2, P2>, s2: Setter<V1, P1>): (t: Target<V2, P2>, v: V2) => Target<V2, P2>;
+export function setterSeries<
+  V1,
+  P1 extends string | number,
+  V2 extends Target<V1, P1>,
+  P2 extends string | number
+>(
+  setters: [Setter<V2, P2>, Setter<V1, P1>],
+  getters: [Getter<V2, P2>]
+): (t: Target<V2, P2>, v: V2) => Target<V2, P2>;
 
 // export function setterSeries<
 //   V1,
@@ -243,11 +245,42 @@ export function seriesOfGetters<V1>(...getters: any[]): (t: any) => V1 {
 //   s6: Setter<V1, P1>
 // ): (t: Target<V6, P6>) => V1;
 
-// export function setterSeries<V1>(...setters: any[], v:any): (t: any) => any {
-//   return (t: any): any => {
-//     return getters.reduce(
-//       (accumulator, currentValue) => currentValue(accumulator),
-//       t
-//     );
-//   };
-// }
+export function setterSeries<V1>(
+  setters: any[],
+  getters: any[]
+): (t: any, v: any) => any {
+  return (t: any): any => {
+    let i = 0;
+    setters.reduceRight((accumulator, currentValue) => {
+      if (i >= 0) {
+        const result = currentValue(getters[i](t), accumulator);
+        i -= 1;
+        return result;
+      }
+      return currentValue(t, accumulator);
+    });
+  };
+}
+
+type Lens<
+  V,
+  PropertyName extends string | number,
+  R = Target<V, PropertyName>
+> = Getter<V, PropertyName, R> & Setter<V, PropertyName, R>;
+
+export function lens<
+  V,
+  PropertyName extends string | number,
+  R = Target<V, PropertyName>
+>(
+  g: Getter<V, PropertyName, R>,
+  s: Setter<V, PropertyName, R>
+): Lens<V, PropertyName, R>;
+
+export function lens(g: any, s: any): any {
+  return (...args): any => {
+    if (args.length === 1) return g(args[0]);
+
+    return s(args[0], args[1]);
+  };
+}

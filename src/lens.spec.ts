@@ -18,18 +18,29 @@ const getL = seriesOfGetters(
   getSix
 );
 
-test('Series return expected value', () => {
+test('Series of getters (array and object) return expected value', () => {
   expect(getL(ds)).toEqual([1, 3]);
 });
 
-// test('Adds 2 + 2 to equal 4', () => {
-//   expect(functions.add(2, 2)).not.toBe(5);
-// });
+const k: {
+  m: {
+    [ID: string]: number;
+  };
+} = { m: { ds: 3 } };
 
-// test('Should be null', () => {
-//   expect(functions.isNull()).toBeNull();
-// });
+const getM = getter('m')<{
+  [ID: string]: number;
+}>();
 
-// test('Should be falsy', () => {
-//   expect(functions.checkValue(null)).toBeFalsy();
-// });
+const getKN = getter('ds')<
+  number,
+  {
+    [ID: string]: number;
+  }
+>();
+
+const getMKN = seriesOfGetters(getM, getKN);
+
+test('Series of getters (object and object with dynamic props) return expected value', () => {
+  expect(getMKN(k)).toBe(3);
+});
