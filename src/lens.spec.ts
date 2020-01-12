@@ -92,7 +92,20 @@ test('Set (array, object and object with dynamic props) returns expected value',
 });
 
 test('Over (array, object and object with dynamic props) returns expected value', () => {
-  expect(over(lensA, a, (v: number): number => v + 1)).toEqual({
+  expect(
+    over(lensA, a, (v: number): number => {
+      return v + 1;
+    })
+  ).toEqual({
     a: { b: { c: { d: [{ e: 3 }, { e: 5 }] } } }
+  });
+});
+
+describe('Transient lenses', () => {
+  test('Lens assoc (array, object and object with dynamic props) returns expected value', () => {
+    lensA(a, 7, true);
+    expect(a).toEqual({
+      a: { b: { c: { d: [{ e: 3 }, { e: 7 }] } } }
+    });
   });
 });

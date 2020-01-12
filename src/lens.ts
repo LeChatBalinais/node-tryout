@@ -13,7 +13,7 @@ type Setter<
   V,
   PropertyName extends string | number,
   R = Target<V, PropertyName>
-> = <T extends R>(t: T, v: V) => T;
+> = <T extends R>(t: T, v: V, transient?: boolean) => T;
 
 export function setter<PropertyName extends string>(
   propName: PropertyName
@@ -24,7 +24,12 @@ export function setter<PropertyName extends number>(
 ): <V, R = Target<V, PropertyName>>() => Setter<V, PropertyName, R>;
 
 export function setter(propName) {
-  return () => (t, v) => {
+  return () => (t, v, transient = false) => {
+    if (transient) {
+      const s = t;
+      s[propName] = v;
+      return s;
+    }
     if (Array.isArray(t))
       return [...t.slice(0, propName), v, ...t.slice(propName + 1)];
 
@@ -299,11 +304,15 @@ export function setterSeries<
 export function setterSeries(setters, getters) {
   const gettersSeries = getters.reduce(createSerieses, []);
 
-  return (t, v) => {
+  return (t, v, transient = false) => {
     let i = gettersSeries.length - 1;
     return setters.reduceRight((accumulator, currentValue) => {
       if (i >= 0) {
-        const result = currentValue(gettersSeries[i](t), accumulator);
+        const result = currentValue(
+          gettersSeries[i](t),
+          accumulator,
+          transient
+        );
         i -= 1;
         return result;
       }
@@ -330,8 +339,8 @@ export function lens<
 export function lens(g, s) {
   return (...args) => {
     if (args.length === 1) return g(args[0]);
-
-    return s(args[0], args[1]);
+    if (args.length === 2) return s(args[0], args[1]);
+    return s(args[0], args[1], args[2]);
   };
 }
 
