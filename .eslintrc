@@ -4,8 +4,7 @@
     "prettier",
     "prettier/@typescript-eslint",
     "plugin:import/typescript",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:import/typescript"
+    "plugin:@typescript-eslint/recommended"
   ],
   "plugins": ["prettier", "@typescript-eslint", "import", "jest"],
   "parserOptions": {
