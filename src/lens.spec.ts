@@ -3,6 +3,7 @@ import { getter, Getter } from './getter';
 import { setter, Setter } from './setter';
 import { seriesOfGetters } from './getter-series';
 import { setterSeries } from './setter-series';
+import { getterArray } from './getter-array';
 
 interface E {
   e: number;
@@ -140,5 +141,20 @@ describe('Transient lenses', () => {
     expect(a).toEqual({
       a: { b: { c: { d: [{ e: 3 }, { e: 7 }] } } }
     });
+  });
+});
+
+describe('Getter array', () => {
+  const o = { a: 1, b: 2 };
+
+  const getA = getter('a')<number>();
+  const getB = getter('b')<string>();
+
+  const getAB = getterArray(getA, getB);
+
+  getAB(o);
+
+  test('Lens assoc (array, object and object with dynamic props) returns expected value', () => {
+    expect(getAB(o)).toEqual([1, '2']);
   });
 });

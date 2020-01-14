@@ -2,7 +2,7 @@ import { Target } from './target';
 
 export type Setter<
   V,
-  PropertyName extends string | number,
+  PropertyName extends string | number | (string | number)[],
   R = Target<V, PropertyName>
 > = <T extends R>(t: T, v: V, transient?: boolean) => T;
 
