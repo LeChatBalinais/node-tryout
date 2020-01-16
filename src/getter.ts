@@ -1,4 +1,10 @@
 import { Target } from './target';
+import {
+  Link,
+  PropTypeRestriction,
+  DefaultPropType,
+  TargetValue
+} from './path';
 
 export type Getter<
   V,
@@ -16,4 +22,20 @@ export function getter<PropertyName extends string>(
 
 export function getter(propName) {
   return () => t => t[propName];
+}
+
+export function getterByLink<
+  V,
+  P extends string,
+  T extends PropTypeRestriction<P> = DefaultPropType<P>
+>(l: Link<V, P, T>): Getter<V, P, TargetValue<V, P, T>>;
+
+export function getterByLink<
+  V,
+  P extends string,
+  T extends PropTypeRestriction<P> = DefaultPropType<P>
+>(l: Link<V, P, T>): Getter<V, P, TargetValue<V, P, T>>;
+
+export function getterByLink(l: any): any {
+  return t => t[l.val];
 }

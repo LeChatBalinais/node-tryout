@@ -3,15 +3,15 @@ enum PropType {
   Static
 }
 
-type PropTypeRestriction<P extends string | number> = P extends string
+export type PropTypeRestriction<P extends string | number> = P extends string
   ? PropType.Dynamic | PropType.Static
   : PropType.Dynamic;
 
-type DefaultPropType<P extends string | number> = P extends string
+export type DefaultPropType<P extends string | number> = P extends string
   ? PropType.Static
   : PropType.Dynamic;
 
-interface Link<
+export interface Link<
   V,
   P extends string | number,
   T extends PropTypeRestriction<P> = DefaultPropType<P>
@@ -19,11 +19,13 @@ interface Link<
   val: P;
 }
 
-function link<P extends string>(val: P): <V>() => Link<V, P>;
-function link<T extends PropType>(val: string): <V>() => Link<V, string, T>;
-function link(val: number): <V>() => Link<V, number>;
+export function link<P extends string>(val: P): <V>() => Link<V, P>;
+export function link<T extends PropType>(
+  val: string
+): <V>() => Link<V, string, T>;
+export function link(val: number): <V>() => Link<V, number>;
 
-function link(
+export function link(
   val: string | number
 ): () => Link<any, string | number, PropType.Dynamic | PropType.Static> {
   return () => ({

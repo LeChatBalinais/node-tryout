@@ -145,7 +145,7 @@ describe('Transient lenses', () => {
 });
 
 describe('Getter array', () => {
-  const o = { a: 1, b: 2 };
+  const o = { a: 1, b: '2' };
 
   const getA = getter('a')<number>();
   const getB = getter('b')<string>();
