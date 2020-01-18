@@ -4,7 +4,7 @@ import { Getter } from './getter-x';
 
 export type Lens<
   V,
-  PropertyName extends string | number,
+  PropertyName extends string | number | (string | number)[],
   R = Target<V, PropertyName>
 > = Getter<V, PropertyName, R> & Setter<V, PropertyName, R>;
 
@@ -38,25 +38,26 @@ export function lens(g) {
   };
 }
 
-export function view<V, PropertyName extends string | number, R>(
-  l: Lens<V, PropertyName, R>,
-  t: R
-): V {
+export function view<
+  V,
+  PropertyName extends string | number | (string | number)[],
+  R
+>(l: Lens<V, PropertyName, R>, t: R): V {
   return l(t);
 }
 
-export function set<V, PropertyName extends string | number, R>(
-  l: Lens<V, PropertyName, R>,
-  t: R,
-  v: V
-): R {
+export function set<
+  V,
+  PropertyName extends string | number | (string | number)[],
+  R
+>(l: Lens<V, PropertyName, R>, t: R, v: V): R {
   return l(t, v);
 }
 
-export function over<V, PropertyName extends string | number, R>(
-  l: Lens<V, PropertyName, R>,
-  t: R,
-  fn: (v: V) => V
-): R {
+export function over<
+  V,
+  PropertyName extends string | number | (string | number)[],
+  R
+>(l: Lens<V, PropertyName, R>, t: R, fn: (v: V) => V): R {
   return set(l, t, fn(view(l, t)));
 }
