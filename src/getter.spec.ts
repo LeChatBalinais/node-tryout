@@ -1,4 +1,4 @@
-import { getter } from './getter-x';
+import { getter } from './getter';
 
 describe('Getter', () => {
   const o = { a: 1, b: '2' };
@@ -7,12 +7,6 @@ describe('Getter', () => {
   const getB = getter('b')<string>();
   const getC = getter('c')<string, { [ID: string]: string }>();
   const get1 = getter(1)<string>();
-
-  const b = getB.focus;
-
-  const c = getC.focus;
-
-  const one = get1.focus;
 
   test('getA returns expected value', () => {
     expect(getA(o)).toEqual(1);

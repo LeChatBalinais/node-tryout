@@ -28,7 +28,7 @@ export function getterArray<
   g1: Getter<V3, P3, R3>,
   g2: Getter<V2, P2, R2>,
   g3: Getter<V1, P1, R1>
-): <T extends R>(t: T) => [V1, V2, V3];
+): Getter<[V3, V2, V1], [P3, P2, P1], R>;
 
 export function getterArray<
   V1,
@@ -49,7 +49,7 @@ export function getterArray<
   g2: Getter<V3, P3, R3>,
   g3: Getter<V2, P2, R2>,
   g4: Getter<V1, P1, R1>
-): <T extends R>(t: T) => [V1, V2, V3, V4];
+): Getter<[V4, V3, V2, V1], [P4, P3, P2, P1], R>;
 
 export function getterArray<
   V1,
@@ -74,7 +74,7 @@ export function getterArray<
   g3: Getter<V3, P3, R3>,
   g4: Getter<V2, P2, R2>,
   g5: Getter<V1, P1, R1>
-): <T extends R>(t: T) => [V1, V2, V3, V4, V5];
+): Getter<[V5, V4, V3, V2, V1], [P5, P4, P3, P2, P1], R>;
 
 export function getterArray(...getters) {
   return t => {

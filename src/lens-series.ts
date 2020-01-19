@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { Lens } from './lens-x';
+import { Lens } from './lens';
 
 export function lensSeries<
   V1,

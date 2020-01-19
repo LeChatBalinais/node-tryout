@@ -1,5 +1,5 @@
-import { getter } from './getter-x';
-import { getterSeries } from './getter-series-x';
+import { getter } from './getter';
+import { getterSeries } from './getter-series';
 
 interface E {
   e: number;

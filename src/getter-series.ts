@@ -1,15 +1,6 @@
 import { Getter } from './getter';
 
-export function seriesOfGettersImpl(...getters) {
-  return t => {
-    return getters.reduce(
-      (accumulator, currentValue) => currentValue(accumulator),
-      t
-    );
-  };
-}
-
-export function seriesOfGetters<
+export function getterSeries<
   V1,
   P1 extends string | number,
   R1,
@@ -18,7 +9,7 @@ export function seriesOfGetters<
   R2
 >(g1: Getter<V2, P2, R2>, g2: Getter<V1, P1, R1>): Getter<V1, P2, R2>;
 
-export function seriesOfGetters<
+export function getterSeries<
   V1,
   P1 extends string | number,
   R1,
@@ -34,7 +25,7 @@ export function seriesOfGetters<
   g3: Getter<V1, P1, R1>
 ): Getter<V1, P3, R3>;
 
-export function seriesOfGetters<
+export function getterSeries<
   V1,
   P1 extends string | number,
   R1,
@@ -54,7 +45,7 @@ export function seriesOfGetters<
   g4: Getter<V1, P1, R1>
 ): Getter<V1, P4, R4>;
 
-export function seriesOfGetters<
+export function getterSeries<
   V1,
   P1 extends string | number,
   R1,
@@ -78,7 +69,7 @@ export function seriesOfGetters<
   g5: Getter<V1, P1, R1>
 ): Getter<V1, P5, R5>;
 
-export function seriesOfGetters<
+export function getterSeries<
   V1,
   P1 extends string | number,
   R1,
@@ -106,6 +97,11 @@ export function seriesOfGetters<
   g6: Getter<V1, P1, R1>
 ): Getter<V1, P6, R6>;
 
-export function seriesOfGetters(...getters) {
-  return seriesOfGettersImpl(...getters);
+export function getterSeries(...getters) {
+  return t => {
+    return getters.reduce(
+      (accumulator, currentValue) => currentValue(accumulator),
+      t
+    );
+  };
 }

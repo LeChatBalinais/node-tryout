@@ -1,5 +1,5 @@
-import { lens, view, set } from './lens-x';
-import { getter } from './getter-x';
+import { lens, view, set } from './lens';
+import { getter } from './getter';
 import { lensArray } from './lens-array';
 
 interface F {
