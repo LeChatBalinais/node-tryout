@@ -17,6 +17,24 @@ export function getter<PropertyName extends string>(
   focus: PropertyName
 ): <V, R = Target<V, PropertyName>>() => Getter<V, PropertyName, R>;
 
-export function getter(focus) {
-  return () => Object.assign(t => (t ? t[focus] : undefined), { focus });
+export function getter<V>(): <
+  PropertyName extends string,
+  R = { [ID: string]: string }
+>(
+  focus: PropertyName
+) => Getter<V, PropertyName, R>;
+
+export function getter<V>(): <
+  PropertyName extends number,
+  R = Target<V, PropertyName>
+>(
+  focus: PropertyName
+) => Getter<V, PropertyName, R>;
+
+export function getter(...args) {
+  if (args.length > 0)
+    return () =>
+      Object.assign(t => (t ? t[args[0]] : undefined), { focus: args[0] });
+
+  return focus => Object.assign(t => (t ? t[focus] : undefined), { focus });
 }
