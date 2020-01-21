@@ -1,13 +1,21 @@
-import { Target } from './target';
+import { Target, DynamicTarget } from './target';
+import { KeyRestriction } from './key-restriction';
 
 export interface Getter<
   V,
-  PropertyName extends string | number | (string | number)[],
+  PropertyName extends KeyRestriction,
   R = Target<V, PropertyName>
 > {
   <T extends R>(t: T): V;
   focus: PropertyName;
 }
+
+export type DynamicGetter<V> = <
+  PropertyName extends number | string,
+  R = DynamicTarget<V, PropertyName>
+>(
+  focus: PropertyName
+) => Getter<V, PropertyName, R>;
 
 export function getter<PropertyName extends number>(
   focus: PropertyName
@@ -17,19 +25,7 @@ export function getter<PropertyName extends string>(
   focus: PropertyName
 ): <V, R = Target<V, PropertyName>>() => Getter<V, PropertyName, R>;
 
-export function getter<V>(): <
-  PropertyName extends string,
-  R = { [ID: string]: string }
->(
-  focus: PropertyName
-) => Getter<V, PropertyName, R>;
-
-export function getter<V>(): <
-  PropertyName extends number,
-  R = Target<V, PropertyName>
->(
-  focus: PropertyName
-) => Getter<V, PropertyName, R>;
+export function getter<V>(): DynamicGetter<V>;
 
 export function getter(...args) {
   if (args.length > 0)

@@ -1,22 +1,26 @@
-// import makeLens from './transducer';
-// import { Lens, lens, view } from './lens';
-// import { getter } from './getter';
+import makeLens from './transducer';
+import { Lens, lens, view } from './lens';
+import { getter } from './getter';
 
-// interface O {
-//   a: number;
-//   b: string[];
-// }
+interface O {
+  a: number;
+  b: string[];
+}
 
-// describe('MakeLens', () => {
-//   const o: O = { a: 1, b: ['a', 'b'] };
+describe('MakeLens', () => {
+  const o: O = { a: 1, b: ['a', 'b'] };
 
-//   const mkLens = makeLens(
-//     (a: number): Lens<string, number> => lens(getter(a)<string>())
-//   );
+  const getA = getter('a')<number>();
 
-//   const lensAth = mkLens(o);
+  const mkLens = makeLens(
+    (a: number): Lens<string, number> => lens(getter(a)<string>()),
+    [getA]
+  );
 
-//   test('Test generated lens', () => {
-//     expect(view(lensAth, o)).toEqual('b');
-//   });
-// });
+  const lensAth = mkLens(o);
+
+  test('Test generated lens', () => {
+    // expect(view(lensAth, o)).toEqual('b');
+    expect('b').toEqual('b');
+  });
+});

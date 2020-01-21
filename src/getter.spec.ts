@@ -9,7 +9,9 @@ describe('Getter', () => {
   const getA = getter('a')<number>();
   const getB = getter('b')<string>();
   const getC = getter<string>()('c');
-  const get1 = getter<string>()(1);
+  const getNth = getter<string>();
+  const get1 = getNth(1);
+  const get0 = getNth(0);
 
   test('getA returns expected value', () => {
     expect(getA(o)).toEqual(1);
@@ -27,7 +29,11 @@ describe('Getter', () => {
     expect(getC(y)).toEqual('ds');
   });
 
-  test('getC returns expected value', () => {
+  test('get0 returns expected value', () => {
+    expect(get0(z)).toEqual('ds');
+  });
+
+  test('get1 returns expected value', () => {
     expect(get1(z)).toEqual('cc');
   });
 });

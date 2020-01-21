@@ -1,27 +1,28 @@
-import { Target } from './target';
+import { Target, DynamicTarget } from './target';
 import { Getter } from './getter';
+import { KeyRestriction } from './key-restriction';
 
 export type Setter<
   V,
-  PropertyName extends string | number | (string | number)[],
+  PropertyName extends KeyRestriction,
   R = Target<V, PropertyName>
 > = <T extends R>(t: T, v: V, transient?: boolean) => T;
 
 export type Lens<
   V,
-  PropertyName extends string | number | (string | number)[],
+  PropertyName extends KeyRestriction,
   R = Target<V, PropertyName>
 > = Getter<V, PropertyName, R> & Setter<V, PropertyName, R>;
 
-export function lens<
-  V,
-  PropertyName extends string | number,
-  R = Target<V, PropertyName>
->(g: Getter<V, PropertyName, R>): Lens<V, PropertyName, R>;
+export type DynamicLens<V> = <
+  PropertyName extends number | string,
+  R = DynamicTarget<V, PropertyName>
+>(
+  focus: PropertyName
+) => Lens<V, PropertyName, R>;
 
-export function lens(g) {
-  const { focus } = g;
-  const s = (t, v, transient = false) => {
+function setter(focus) {
+  return (t, v, transient = false) => {
     if (!t) return t;
     if (transient) {
       const ts = t;
@@ -36,6 +37,11 @@ export function lens(g) {
       [focus]: v
     };
   };
+}
+
+function makeLens(g) {
+  const { focus } = g;
+  const s = setter(focus);
   return (...args) => {
     if (args.length === 1) return g(args[0]);
     if (args.length === 2) return s(args[0], args[1]);
@@ -43,26 +49,48 @@ export function lens(g) {
   };
 }
 
-export function view<
+export function lens<
   V,
-  PropertyName extends string | number | (string | number)[],
-  R
->(l: Lens<V, PropertyName, R>, t: R): V {
+  PropertyName extends string | number,
+  R = Target<V, PropertyName>
+>(g: Getter<V, PropertyName, R>): Lens<V, PropertyName, R>;
+
+export function lens<V>(
+  g: <PropertyName extends number | string, R = DynamicTarget<V, PropertyName>>(
+    focus: PropertyName
+  ) => Getter<V, PropertyName, R>
+): DynamicLens<V>;
+
+export function lens(g) {
+  if (g.focus === undefined) {
+    return focus => {
+      const gtr = g(focus);
+
+      return makeLens(gtr);
+    };
+  }
+  return makeLens(g);
+}
+
+export function view<V, PropertyName extends KeyRestriction, R>(
+  l: Lens<V, PropertyName, R>,
+  t: R
+): V {
   return l(t);
 }
 
-export function set<
-  V,
-  PropertyName extends string | number | (string | number)[],
-  R
->(l: Lens<V, PropertyName, R>, t: R, v: V): R {
+export function set<V, PropertyName extends KeyRestriction, R>(
+  l: Lens<V, PropertyName, R>,
+  t: R,
+  v: V
+): R {
   return l(t, v);
 }
 
-export function over<
-  V,
-  PropertyName extends string | number | (string | number)[],
-  R
->(l: Lens<V, PropertyName, R>, t: R, fn: (v: V) => V): R {
+export function over<V, PropertyName extends KeyRestriction, R>(
+  l: Lens<V, PropertyName, R>,
+  t: R,
+  fn: (v: V) => V
+): R {
   return set(l, t, fn(view(l, t)));
 }
