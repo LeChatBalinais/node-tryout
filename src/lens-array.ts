@@ -1,6 +1,20 @@
 import produce from 'immer';
 import { Lens } from './lens';
 
+export function lensArrayImpl(...lenses) {
+  return (...args) => {
+    if (args.length === 1) return [...lenses.map(lens => lens(args[0]))];
+
+    if (args.length === 2 || args[2] === false)
+      return produce(args[0], draftT => {
+        lenses.forEach((lens, i) => lens(draftT, args[1][i], true));
+      });
+
+    lenses.forEach((lens, i) => lens(args[0], args[1][i], true));
+    return args[0];
+  };
+}
+
 export function lensArray<
   V1,
   P1 extends string | number,
@@ -75,15 +89,5 @@ export function lensArray<
 ): Lens<[V5, V4, V3, V2, V1], [P5, P4, P3, P2, P1], R>;
 
 export function lensArray(...lenses) {
-  return (...args) => {
-    if (args.length === 1) return [...lenses.map(lens => lens(args[0]))];
-
-    if (args.length === 2 || args[2] === false)
-      return produce(args[0], draftT => {
-        lenses.forEach((lens, i) => lens(draftT, args[1][i], true));
-      });
-
-    lenses.forEach((lens, i) => lens(args[0], args[1][i], true));
-    return args[0];
-  };
+  return lensArrayImpl(...lenses);
 }

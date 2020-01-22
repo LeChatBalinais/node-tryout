@@ -1,19 +1,19 @@
 import { Lens } from './lens';
 import { Getter } from './getter';
-import { KeyRestriction } from './key-restriction';
+import { KeyRestrictionExt } from './key-restriction';
 
 // type Transducer<R> = <T extends R>(t: T) => T;
 
 // type Configurator<R> = <T extends R>(t: T) => [];
 
-type MakeLens<V, P extends KeyRestriction, R> = (t: R) => Lens<V, P, R>;
+type MakeLens<V, P extends KeyRestrictionExt, R> = (t: R) => Lens<V, P, R>;
 
 export default function makeLens<
   V1,
-  P1 extends KeyRestriction,
+  P1 extends KeyRestrictionExt,
   R1,
   V,
-  P extends KeyRestriction,
+  P extends KeyRestrictionExt,
   R extends R1
 >(
   determineLens: (arg1: V1) => Lens<V, P, R>,

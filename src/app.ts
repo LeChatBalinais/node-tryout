@@ -1,37 +1,28 @@
-import { lens, Lens } from './lens';
-import { getter, Getter } from './getter';
-import { KeyRestriction } from './key-restriction';
+import { lens } from './lens';
+import { getter } from './getter';
+import { filter } from './filter';
+import { condition } from './condition';
+import { focusedReducers } from './focused-reducer';
+import { reducer } from './reducer';
 
-const b = { a: 1, b: 3 };
+const b = { a: 2, b: 3, c: 'string' };
 
-function filter<V1, V, P1 extends KeyRestriction, GR1>(
-  f: (gv1: V1, v?: V) => V,
-  getters: [Getter<V1, P1, GR1>]
-): (s: GR1, v?: V) => V {
-  return (s: GR1, v?: V): V => f(getters[0](s), v);
-}
-
-interface LensReducer<V, P extends KeyRestriction, LR, FR, R = LR | FR> {
-  lens: Lens<V, P, LR>;
-  filter: (s: FR, v?: V) => V;
-}
-
-const rd = [
+const rd = focusedReducers([
   {
     lens: lens(getter('a')<number>()),
-    filter: filter((gv1: number): number => gv1 + 5, [getter('a')<number>()])
+    filter: filter((gv1: number, v: number): number => gv1 + v + 5, [
+      getter('b')<number>()
+    ])
+  },
+  {
+    lens: lens(getter('c')<string>()),
+    condition: condition((gv1: number) => gv1 > 1, [getter('b')<number>()]),
+    filter: filter((gv1: number, v: string): string => gv1 + v, [
+      getter('b')<number>()
+    ])
   }
-];
+]);
 
-function reduce<V, P extends KeyRestriction, LR, FR, R = LR | MR>({
-  lens: lens1,
-  filter: filter1
-}: LensReducer<V, P, LR, FR, R>): <S extends R>(s: S) => S {
-  return <S extends R>(s: S): S => {
-    return lens1(s, filter1(s));
-  };
-}
-
-const r = reduce(rd[0]);
+const r = reducer(...rd);
 
 console.log(r(b));

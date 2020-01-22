@@ -1,16 +1,16 @@
 import { Target, DynamicTarget } from './target';
 import { Getter } from './getter';
-import { KeyRestriction } from './key-restriction';
+import { KeyRestrictionExt } from './key-restriction';
 
 export type Setter<
   V,
-  PropertyName extends KeyRestriction,
+  PropertyName extends KeyRestrictionExt,
   R = Target<V, PropertyName>
 > = <T extends R>(t: T, v: V, transient?: boolean) => T;
 
 export type Lens<
   V,
-  PropertyName extends KeyRestriction,
+  PropertyName extends KeyRestrictionExt,
   R = Target<V, PropertyName>
 > = Getter<V, PropertyName, R> & Setter<V, PropertyName, R>;
 
@@ -72,14 +72,14 @@ export function lens(g) {
   return makeLens(g);
 }
 
-export function view<V, PropertyName extends KeyRestriction, R>(
+export function view<V, PropertyName extends KeyRestrictionExt, R>(
   l: Lens<V, PropertyName, R>,
   t: R
 ): V {
   return l(t);
 }
 
-export function set<V, PropertyName extends KeyRestriction, R>(
+export function set<V, PropertyName extends KeyRestrictionExt, R>(
   l: Lens<V, PropertyName, R>,
   t: R,
   v: V
@@ -87,7 +87,7 @@ export function set<V, PropertyName extends KeyRestriction, R>(
   return l(t, v);
 }
 
-export function over<V, PropertyName extends KeyRestriction, R>(
+export function over<V, PropertyName extends KeyRestrictionExt, R>(
   l: Lens<V, PropertyName, R>,
   t: R,
   fn: (v: V) => V

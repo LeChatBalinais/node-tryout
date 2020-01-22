@@ -1,9 +1,9 @@
 import { Target, DynamicTarget } from './target';
-import { KeyRestriction } from './key-restriction';
+import { KeyRestrictionExt } from './key-restriction';
 
 export interface Getter<
   V,
-  PropertyName extends KeyRestriction,
+  PropertyName extends KeyRestrictionExt,
   R = Target<V, PropertyName>
 > {
   <T extends R>(t: T): V;
