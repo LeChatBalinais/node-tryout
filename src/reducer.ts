@@ -5,7 +5,7 @@ import { lensArrayImpl } from './lens-array';
 export type Reducer<R> = <S extends R>(s: S) => S;
 
 export function reducer<V1, P1 extends KeyRestrictionExt, R1>(
-  fR1: FocusedReducer<V1, P1, R1>
+  fR: [FocusedReducer<V1, P1, R1>]
 ): Reducer<R1>;
 
 export function reducer<
@@ -16,12 +16,11 @@ export function reducer<
   P2 extends KeyRestrictionExt,
   R2
 >(
-  fR1: FocusedReducer<V1, P1, R1>,
-  fR2: FocusedReducer<V2, P2, R2>
+  fr: [FocusedReducer<V1, P1, R1>, FocusedReducer<V2, P2, R2>]
 ): Reducer<R1 & R2>;
 
-export function reducer(...args) {
-  const lensArray = lensArrayImpl(...args.map(fr => fr.lens));
+export function reducer(args) {
+  const lensArray = lensArrayImpl(...args.map(fr => fr.focus));
   const filterArray = args.map(fr => fr.filter);
   const conditionArray = args.map(fr => fr.condition);
 

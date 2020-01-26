@@ -4,7 +4,7 @@ import { Filter } from './filter';
 import { KeyRestrictionExt } from './key-restriction';
 
 export interface FocusedReducer<V, P extends KeyRestrictionExt, S> {
-  lens: Lens<V, P, S>;
+  focus: Lens<V, P, S>;
   condition?: Condition<S>;
   filter: Filter<S, V>;
 }
@@ -12,7 +12,7 @@ export interface FocusedReducer<V, P extends KeyRestrictionExt, S> {
 export function focusedReducers<V, P extends KeyRestrictionExt, FR, LR, CR>(
   d: [
     {
-      lens: Lens<V, P, LR>;
+      focus: Lens<V, P, LR>;
       condition?: Condition<CR>;
       filter: Filter<FR, V>;
     }
@@ -33,12 +33,12 @@ export function focusedReducers<
 >(
   d: [
     {
-      lens: Lens<V1, P1, LR1>;
+      focus: Lens<V1, P1, LR1>;
       condition?: Condition<CR1>;
       filter: Filter<FR1, V1>;
     },
     {
-      lens: Lens<V2, P2, LR2>;
+      focus: Lens<V2, P2, LR2>;
       condition?: Condition<CR2>;
       filter: Filter<FR2, V2>;
     }
