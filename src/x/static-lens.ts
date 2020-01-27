@@ -2,12 +2,23 @@ import applyMixins from './apply-mixins';
 import StaticGetter from './static-getter';
 import StaticSetter from './static-setter';
 import Lens from './lens';
-import { Target } from '../target';
+import { PathType } from './target';
 
-export class StaticLens<V, P extends string> extends Lens<V, Target<V, P>> {
+export class StaticLens<V, P extends string> extends Lens<
+  V,
+  P,
+  PathType.Static
+> {
+  pathType: PathType.Static = PathType.Static;
+
   constructor(focus: P) {
     super();
     this.focus = focus;
+    this.pathType = PathType.Static;
+  }
+
+  getPathType(): PathType.Static {
+    return this.pathType;
   }
 }
 

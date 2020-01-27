@@ -1,9 +1,9 @@
 import Setter from './setter';
-import { Target } from '../target';
+import { Target, PathType, Value } from './target';
 
 export default class StaticSetter<V, P extends string> extends Setter<
   V,
-  Target<V, P>
+  Target<PathType.Static, P, V>
 > {
   focus: P;
 
@@ -12,7 +12,10 @@ export default class StaticSetter<V, P extends string> extends Setter<
     this.focus = focus;
   }
 
-  set<S extends Target<V, P>>(s: S, v: V): S {
+  set<S extends Target<PathType.Static, P, V>>(
+    s: S,
+    v: Value<PathType.Static, V>
+  ): S {
     return {
       ...s,
       [this.focus]: v

@@ -41,15 +41,22 @@ console.log(a.set({ a: 3 }, 5));
 
 const ds = [0, 2];
 
-const generator = function* bar(): Generator<number, void, unknown> {
-  for (let i = 0, len = ds.length; i < len; i += 1) {
-    yield ds[i];
-  }
+const ad = (mm: number[]) => {
+  return (): number[] => {
+    return mm;
+  };
 };
 
-const gen = function* foo(): Generator<string, void, unknown> {
-  yield 'e';
-  yield 'm';
+const generator = ad([0, 1]);
+
+// const generator = function* bar(): Generator<number, void, unknown> {
+//   for (let i = 0, len = ds.length; i < len; i += 1) {
+//     yield ds[i];
+//   }
+// };
+
+const gen = (): string[] => {
+  return ['e', 'm'];
 };
 
 const m = dynamicLens<string>()(generator);

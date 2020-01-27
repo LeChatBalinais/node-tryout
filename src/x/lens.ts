@@ -1,5 +1,9 @@
-export default abstract class Lens<V, R> {
-  abstract get<S extends R>(s: S): V;
+import { Target, PathType, Value } from './target';
 
-  abstract set<S extends R>(s: S, v: V): S;
+export default abstract class Lens<V, PropertyName, T extends PathType> {
+  abstract get<S extends Target<T, PropertyName, V>>(s: S): Value<T, V>;
+
+  abstract set<S extends Target<T, PropertyName, V>>(s: S, v: Value<T, V>): S;
+
+  abstract getPathType(): T;
 }

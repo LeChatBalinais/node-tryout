@@ -1,31 +1,26 @@
 import { produce } from 'immer';
 import Setter from './setter';
-import { DynamicTarget } from '../target';
+import { Target, PathType } from './target';
 
 export default class DynamicSetter<V, P extends string | number> extends Setter<
   V[],
-  DynamicTarget<V, P>
+  Target<PathType.Dynamic, P, V>
 > {
-  focus: () => Generator<P, void, unknown>;
+  focus: () => P[];
 
-  constructor(focus: () => Generator<P, void, unknown>) {
+  constructor(focus: () => P[]) {
     super();
     this.focus = focus;
   }
 
-  set<S extends DynamicTarget<V, P>>(s: S, v: V[]): S {
+  set<S extends Target<PathType.Dynamic, P, V>>(s: S, v: V[]): S {
     return produce(s, draft => {
-      const g = this.focus();
-
       const d = draft;
 
-      let x = g.next();
-      let i = 0;
-      while (!x.done) {
-        if (Array.isArray(s)) d[x.value as number] = v[i];
-        else d[x.value as string] = v[i];
-        i += 1;
-        x = g.next();
+      const f = this.focus();
+      for (let i = 0; i < f.length; i += 1) {
+        if (Array.isArray(s)) d[f[i] as number] = v[i];
+        else d[f[i] as string] = v[i];
       }
     });
   }

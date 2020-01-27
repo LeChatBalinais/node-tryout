@@ -1,9 +1,9 @@
 import Getter from './getter';
-import { Target } from '../target';
+import { Target, PathType, Value } from './target';
 
 export default class StaticGetter<V, P extends string> extends Getter<
   V,
-  Target<V, P>
+  Target<PathType.Static, P, V>
 > {
   focus: P;
 
@@ -12,7 +12,9 @@ export default class StaticGetter<V, P extends string> extends Getter<
     this.focus = focus;
   }
 
-  get<S extends Target<V, P>>(s: S): V {
+  get<S extends Target<PathType.Static, P, V>>(
+    s: S
+  ): Value<PathType.Static, V> {
     return s ? s[this.focus] : undefined;
   }
 }

@@ -1,29 +1,27 @@
 import Getter from './getter';
-import { DynamicTarget } from '../target';
+import { Target, PathType, Value } from './target';
 
 export default class DynamicGetter<V, P extends string | number> extends Getter<
-  V[],
-  DynamicTarget<V, P>
+  Value<PathType.Dynamic, V>,
+  Target<PathType.Dynamic, P, V>
 > {
-  focus: () => Generator<P, void, unknown>;
+  focus: () => P[];
 
-  constructor(focus: () => Generator<P, void, unknown>) {
+  constructor(focus: () => P[]) {
     super();
     this.focus = focus;
   }
 
-  get<S extends DynamicTarget<V, P>>(s: S): V[] {
+  get<S extends Target<PathType.Dynamic, P, V>>(
+    s: S
+  ): Value<PathType.Dynamic, V> {
     const result: V[] = [];
 
     if (s) {
-      const generator = this.focus();
-
-      let key = generator.next();
-
-      while (!key.done) {
-        const val = (s as any)[key.value];
+      const f = this.focus();
+      for (let i = 0; i < f.length; i += 1) {
+        const val = (s as any)[f[i]];
         if (val !== undefined) result.push(val);
-        key = generator.next();
       }
     }
 
