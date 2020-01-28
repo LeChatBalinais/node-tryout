@@ -33,11 +33,17 @@
 // console.log(r(o));
 import { staticLens } from './x/static-lens';
 import { dynamicLens } from './x/dynamic-lens';
+import { lensSequence } from './x/lens-sequence';
 
-const a = staticLens<number>()('a');
+const a = staticLens<{ b: number }>()('a');
+const b = staticLens<number>()('b');
 
-console.log(a.get({ a: 3 }));
-console.log(a.set({ a: 3 }, 5));
+console.log(a.get({ a: { b: 3 } }));
+console.log(a.set({ a: { b: 3 } }, { b: 5 }));
+
+const ab = lensSequence([a, b]);
+
+console.log('seq: ', ab.get({ a: { b: 3 } }));
 
 const ds = [0, 2];
 
@@ -48,12 +54,6 @@ const ad = (mm: number[]) => {
 };
 
 const generator = ad([0, 1]);
-
-// const generator = function* bar(): Generator<number, void, unknown> {
-//   for (let i = 0, len = ds.length; i < len; i += 1) {
-//     yield ds[i];
-//   }
-// };
 
 const gen = (): string[] => {
   return ['e', 'm'];
@@ -70,3 +70,5 @@ console.log(m.set(['s', 'd', 'g'], ['u', 'v']));
 
 console.log(f.get({ e: 3, ds: 9, m: 8 }));
 console.log(f.set({ e: 3, ds: 9, m: 8 }, [7, 4]));
+
+// const m;

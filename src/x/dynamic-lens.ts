@@ -2,7 +2,7 @@ import applyMixins from './apply-mixins';
 import Lens from './lens';
 import DynamicSetter from './dynamic-setter';
 import DynamicGetter from './dynamic-getter';
-import { PathType } from './target';
+import { PathType, Focus } from './target';
 
 export class DynamicLens<V, P extends string | number> extends Lens<
   V,
@@ -18,6 +18,10 @@ export class DynamicLens<V, P extends string | number> extends Lens<
 
   getPathType(): PathType.Dynamic {
     return this.pathType;
+  }
+
+  getFocus(): Focus<PathType.Dynamic, P> {
+    return this.focus;
   }
 }
 

@@ -20,6 +20,10 @@ export class StaticLens<V, P extends string> extends Lens<
   getPathType(): PathType.Static {
     return this.pathType;
   }
+
+  getFocus(): P {
+    return this.focus;
+  }
 }
 
 export interface StaticLens<V, P extends string>
