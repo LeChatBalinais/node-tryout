@@ -6,7 +6,7 @@ export type Filter<S, V> = (s: S, v: V) => V;
 export function filter<V>(f: (v?: V) => V): Filter<any, V>;
 
 export function filter<V1, P1 extends KeyRestrictionExt, GR1, V>(
-  getters: [ValueProvider<V1, P1, GR1> | number],
+  getters: [ValueProvider<V1, P1, GR1>],
   f: (gv1: V1, v?: V) => V
 ): Filter<GR1, V>;
 
