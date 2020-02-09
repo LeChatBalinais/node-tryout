@@ -10,6 +10,12 @@ export type Value<VT extends ValueType, V> = VT extends ValueType.Simple
   ? V[]
   : { [ID in string]: V };
 
+export type TeleValue<V, VT> = VT extends ValueType.Simple
+  ? V
+  : VT extends ValueType.Array
+  ? V[]
+  : { [ID in string]: V };
+
 export type Target<
   F extends string,
   VT extends ValueType,

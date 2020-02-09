@@ -2,6 +2,7 @@ import View from './view';
 import { ValueType } from './target';
 
 export default abstract class ILens<
+  F,
   VT extends ValueType,
   VLU,
   IVLU,
@@ -16,4 +17,6 @@ export default abstract class ILens<
   abstract setOver<S extends R>(s: S, f: (v: IVLU) => IVLU): S;
 
   abstract getValueType(): VT;
+
+  abstract getFocus(): F;
 }

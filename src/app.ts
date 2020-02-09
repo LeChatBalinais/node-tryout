@@ -76,50 +76,39 @@
 
 import { lens } from './z/lens';
 import { ValueType } from './z/target';
+import { telescope } from './z/telescope';
 
-const a = lens<number>()('a', ValueType.Simple, undefined);
+const a = lens<{ b: number }>()('a', ValueType.Simple, undefined);
+const b = lens<number>()('b', ValueType.Simple, undefined);
+const d = lens<{ c: number[] }>()('d', ValueType.Simple, undefined);
+const c = lens<number>()('c', ValueType.Array, undefined);
+const e = lens<{ f: number }>()('e', ValueType.Array, undefined);
+const f = lens<number>()('f', ValueType.Simple, undefined);
 
-console.log(a.view({ a: 3 }));
-console.log(a.set({ a: 3 }, 5));
+const g = lens<{ h: { [ID in string]: number } }>()(
+  'g',
+  ValueType.Simple,
+  undefined
+);
+const h = lens<number>()('h', ValueType.AssociativeArray, undefined);
 
-a.viewOver({ a: 3 }, (v: number) => console.log(v));
+const i = lens<{ j: number }>()('i', ValueType.AssociativeArray, undefined);
 
-console.log(a.setOver({ a: 3 }, (v: number) => v + 2));
+const j = lens<number>()('j', ValueType.Simple, undefined);
 
-const b = lens<number>()('b', ValueType.Array, undefined);
+const tlscpAB = telescope(a, b);
 
-console.log(b.view({ b: [8, 7] }));
-console.log(b.set({ b: [8, 7] }, [5, 6]));
+const tlscpDC = telescope(d, c);
 
-b.viewOver({ b: [8, 7] }, (v: number) => console.log(v));
+const tlscpEF = telescope(e, f);
 
-console.log(b.setOver({ b: [8, 7] }, (v: number) => v + 2));
+const tlscpGH = telescope(g, h);
 
-const c = lens<number>()('c', ValueType.AssociativeArray, undefined);
+const tlscpIJ = telescope(i, j);
 
-console.log(c.view({ c: { a: 8, b: 7 } }));
-console.log(c.set({ c: { a: 8, b: 7 } }, { c: 9, d: 10 }));
+// console.log(tlscp.view({ a: { b: 3 } }));
 
-c.viewOver({ c: { a: 8, b: 7 } }, (v: number) => console.log(v));
+const ads = [];
+ads[1] = 3;
 
-console.log(c.setOver({ c: { a: 8, b: 7 } }, (v: number) => v + 2));
-
-function* keyGen() {
-  yield 1;
-  yield 3;
-}
-
-const d = lens<number>()('d', ValueType.Array, keyGen);
-
-console.log(d.view({ d: [1, 2, 3, 4] }));
-
-const arrToAssign = [];
-
-arrToAssign[1] = 0;
-arrToAssign[3] = 0;
-
-console.log(d.set({ d: [1, 2, 3, 4] }, arrToAssign));
-
-d.viewOver({ d: [1, 2, 3, 4] }, (v: number) => console.log(v));
-
-console.log(d.setOver({ d: [1, 2, 3, 4] }, (v: number) => v + 2));
+console.log(ads.map(v => 2 * v));

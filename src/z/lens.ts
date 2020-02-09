@@ -10,7 +10,7 @@ export default class Lens<
   F extends string,
   VT extends ValueType,
   SF extends NumberSubFocusGenerator | StringSubFocusGenerator
-> extends ILens<VT, Value<VT, V>, V, Target<F, VT, V>> {
+> extends ILens<F, VT, Value<VT, V>, V, Target<F, VT, V>> {
   focus: F;
 
   subFocus?: SF;
@@ -238,6 +238,10 @@ export default class Lens<
   getValueType(): VT {
     return this.valueType;
   }
+
+  getFocus(): F {
+    return this.focus;
+  }
 }
 
 export function lens<V>(): <
@@ -248,7 +252,7 @@ export function lens<V>(): <
   focus: F,
   valueType: VT,
   subFocus: SF
-) => ILens<VT, Value<VT, V>, V, Target<F, VT, V>> {
+) => ILens<F, VT, Value<VT, V>, V, Target<F, VT, V>> {
   return <
     F extends string,
     VT extends ValueType = ValueType.Simple,
@@ -257,6 +261,6 @@ export function lens<V>(): <
     focus: F,
     valueType: VT,
     subFocus: SF
-  ): ILens<VT, Value<VT, V>, V, Target<F, VT, V>> =>
+  ): ILens<F, VT, Value<VT, V>, V, Target<F, VT, V>> =>
     new Lens<V, F, VT, SF>(focus, subFocus, valueType);
 }

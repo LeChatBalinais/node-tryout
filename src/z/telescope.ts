@@ -1,108 +1,158 @@
-// // import produce from 'immer';
-// // import Lens from './lens';
-// // import {
-// //   PathType,
-// //   Target,
-// //   Value,
-// //   SequencePathType,
-// //   sequencePathType,
-// //   Focus
-// // } from './target';
-// // import Getter from './getter';
-// // import Setter from './setter';
-// // import applyMixins from './apply-mixins';
-// import ILens from './ilens';
+import ILens from './ilens';
+import { ValueType, Target, TeleValue } from './target';
 
-// export default class Telescope<
-//   V,
-//   P1,
-//   T1 extends PathType,
-//   T extends PathType,
-//   R
-// > extends ILens<V, P1, T, R, Focus<T1, P1>> {
-//   key: Focus<T1, P1>;
+export default class Telescope<
+  F,
+  VT extends ValueType,
+  VLU,
+  IVLU,
+  R
+> extends ILens<F, VT, VLU, IVLU, R> {
+  valueType: VT;
 
-//   pathType: T;
+  focus: F;
 
-//   getFunc: <S extends R>(s: S) => Value<T, V>;
+  viewFunc: <S extends R>(s: S) => VLU;
 
-//   setFunc: <S extends R>(s: S, v: Value<T, V>) => S;
+  viewOverFunc: <S extends R>(s: S, f: (v: IVLU) => void) => void;
 
-//   constructor(
-//     key: Focus<T1, P1>,
-//     pathType: T,
-//     getFunc: <S extends R>(s: S) => Value<T, V>,
-//     setFunc: <S extends R>(s: S, v: Value<T, V>) => S
-//   ) {
-//     super();
-//     this.key = key;
-//     this.pathType = pathType;
-//     this.getFunc = getFunc;
-//     this.setFunc = setFunc;
-//   }
+  setFunc: <S extends R>(s: S, v: VLU) => S;
 
-//   view<S extends R>(s: S): VLU;
+  setOverFunc: <S extends R>(s: S, f: (v: IVLU) => IVLU) => S;
 
-//   viewOver<S extends R>(s: S, f: (v: IVLU) => void): void;
+  constructor(
+    focus: F,
+    valueType: VT,
+    viewFunc: <S extends R>(s: S) => VLU,
+    viewOverFunc: <S extends R>(s: S, f: (v: IVLU) => void) => void,
+    setFunc: <S extends R>(s: S, v: VLU) => S,
+    setOverFunc: <S extends R>(s: S, f: (v: IVLU) => IVLU) => S
+  ) {
+    super();
+    this.valueType = valueType;
+    this.viewFunc = viewFunc;
+    this.viewOverFunc = viewOverFunc;
+    this.setFunc = setFunc;
+    this.setOverFunc = setOverFunc;
+  }
 
-//   set<S extends R>(s: S, v: VLU): S;
+  view<S extends R>(s: S): VLU {
+    return this.viewFunc(s);
+  }
 
-//   setOver<S extends R>(s: S, f: (v: IVLU) => IVLU): S;
-// }
+  viewOver<S extends R>(s: S, f: (v: IVLU) => void): void {
+    this.viewOverFunc(s, f);
+  }
 
-// export function telescope<
-//   V1,
-//   P1,
-//   T1 extends PathType,
-//   R1,
-//   V2 extends Target<T1, P1, V1>,
-//   P2,
-//   T2 extends PathType,
-//   R2
-// >(
-//   lenses: [ILens<V2, IV2, R2>, ILens<V1, IV1, R1>]
-// ): LensSequence<
-//   V1,
-//   P2,
-//   T2,
-//   SequencePathType<T2, T1>,
-//   Target<SequencePathType<T2, T1>, P2, V2>
-// > {
-//   const getFunc = <S extends Target<SequencePathType<T2, T1>, P2, V2>>(
-//     s: S
-//   ): Value<SequencePathType<T2, T1>, V1> => {
-//     let arrLevel = 0;
-//     return lenses.reduce((accumulator, currentValue) => {
-//       const result = (currentValue as any).get(accumulator);
-//       if (currentValue.getPathType() === PathType.Dynamic) arrLevel += 1;
-//       return result;
-//     }, s);
-//   };
+  set<S extends R>(s: S, v: VLU): S {
+    return this.setFunc(s, v);
+  }
 
-//   const setFunc = <S extends Target<SequencePathType<T2, T1>, P2, V2>>(
-//     s: S,
-//     v: Value<SequencePathType<T2, T1>, V1>
-//   ): S => {
-//     return produce(s, draftS => {
-//       const focused = lenses.reduce((accumulator, lens, i, array) => {
-//         return i === array.length - 1
-//           ? accumulator
-//           : (lens as any).get(accumulator);
-//       }, draftS);
-//       (lenses[lenses.length - 1] as any).set(focused, v);
-//     });
-//   };
+  setOver<S extends R>(s: S, f: (v: IVLU) => IVLU): S {
+    return this.setOverFunc(s, f);
+  }
 
-//   return new LensSequence<
-//     V1,
-//     P2,
-//     T2,
-//     SequencePathType<T2, T1>,
-//     Target<SequencePathType<T2, T1>, P2, V2>
-//   >(
-//     lenses[0].getFocus(),
-//     sequencePathType(lenses[0].getPathType(), lenses[1].getPathType()),
-//     getFunc,
-//     setFunc
-//   );
-// }
+  getValueType(): VT {
+    return this.valueType;
+  }
+
+  getFocus(): F {
+    return this.focus;
+  }
+}
+
+export function telescope<
+  F1 extends string,
+  VT1 extends ValueType,
+  V1,
+  IV1,
+  R1,
+  F2 extends string,
+  VT2 extends ValueType,
+  V2,
+  IV2 extends Target<F1, VT1, IV1>,
+  R2
+>(
+  l1: ILens<F2, VT2, V2, IV2, R2>,
+  l2: ILens<F1, VT1, V1, IV1, R1>
+): ILens<F2, VT2, TeleValue<TeleValue<IV1, VT1>, VT2>, IV1, R2>;
+
+export function telescope<
+  F1 extends string,
+  VT1 extends ValueType,
+  V1,
+  IV1,
+  R1,
+  F2 extends string,
+  VT2 extends ValueType,
+  V2,
+  IV2 extends Target<F1, VT1, IV1>,
+  R2,
+  F3 extends string,
+  VT3 extends ValueType,
+  V3,
+  IV3 extends Target<F2, VT2, IV2>,
+  R3
+>(
+  l1: ILens<F3, VT3, V3, IV3, R3>,
+  l2: ILens<F2, VT2, V2, IV2, R2>,
+  l3: ILens<F1, VT1, V1, IV1, R1>
+): ILens<F3, VT3, TeleValue<TeleValue<TeleValue<IV1, VT1>, VT2>, VT3>, IV1, R3>;
+
+export function telescope(...args): any {
+  const applyViewOnLens = (t, lens): any => lens.view(t);
+
+  const viewFunc = (s): any => {
+    let applyLens = applyViewOnLens;
+
+    return args.reduce((target, lens) => {
+      const result = applyLens(target, lens);
+
+      switch (lens.getValueType()) {
+        case ValueType.Array:
+          applyLens = (appLns => (trgt, lns): any => {
+            return trgt.map(value => appLns(value, lns));
+          })(applyLens);
+          break;
+        case ValueType.AssociativeArray:
+          applyLens = (appLns => (trgt, lns): any =>
+            Object.fromEntries(
+              Object.entries(trgt).map(([key, value]) => [
+                key,
+                appLns(value, lns)
+              ])
+            ))(applyLens);
+          break;
+        default:
+          break;
+      }
+
+      return result;
+    }, s);
+  };
+
+  const viewOverFunc = (s, f): any => {
+    const viewOver = args.reduceRight((currentViewOver, lens): any => {
+      return (trgt): any => lens.viewOver(trgt, currentViewOver);
+    }, f);
+
+    viewOver(s);
+  };
+
+  const setFunc = (s, v): any => {
+    return s;
+  };
+
+  const setOverFunc = (s, f): any => {
+    return s;
+  };
+
+  return new Telescope<string, ValueType, any, any, any>(
+    args[0].getFocus(),
+    args[0].getValueType(),
+    viewFunc,
+    viewOverFunc,
+    setFunc,
+    setOverFunc
+  );
+}
