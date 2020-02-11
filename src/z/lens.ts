@@ -125,19 +125,41 @@ export default class Lens<
     }
   }
 
-  set<S extends Target<F, VT, V>>(s: S, v: Value<VT, V>): S {
+  set<S extends Target<F, VT, V>>(s: S, v: Value<VT, V>, transient = false): S {
     if (s === undefined) return s;
 
     switch (this.valueType) {
       case ValueType.Simple: {
+        if (transient) {
+          const tempS = s;
+          (tempS as any)[this.focus] = v;
+          return tempS;
+        }
         return { ...s, [this.focus]: v };
       }
       case ValueType.Array: {
-        if (this.subFocus === undefined) return { ...s, [this.focus]: v };
+        if (this.subFocus === undefined) {
+          if (transient) {
+            const tempS = s;
+            (tempS as any)[this.focus] = v;
+            return tempS;
+          }
+          return { ...s, [this.focus]: v };
+        }
 
         const it = ((this.subFocus as unknown) as NumberSubFocusGenerator)();
 
         let arr = s[this.focus];
+
+        if (transient) {
+          let key = it.next();
+
+          while (!key.done) {
+            arr[key.value as number] = v[key.value as number];
+            key = it.next();
+          }
+          return s;
+        }
 
         arr = produce(arr, arrDraft => {
           const arrDraftC = arrDraft;
@@ -151,11 +173,28 @@ export default class Lens<
         return { ...s, [this.focus]: arr };
       }
       case ValueType.AssociativeArray: {
-        if (this.subFocus === undefined) return { ...s, [this.focus]: v };
+        if (this.subFocus === undefined) {
+          if (transient) {
+            const tempS = s;
+            (tempS as any)[this.focus] = v;
+            return tempS;
+          }
+          return { ...s, [this.focus]: v };
+        }
 
         const it = ((this.subFocus as unknown) as StringSubFocusGenerator)();
 
         let obj = s[this.focus];
+
+        if (transient) {
+          let key = it.next();
+
+          while (!key.done) {
+            obj[key.value as string] = v[key.value as string];
+            key = it.next();
+          }
+          return s;
+        }
 
         obj = produce(obj, objDraft => {
           const objDraftC = objDraft;
@@ -173,51 +212,97 @@ export default class Lens<
     }
   }
 
-  setOver<S extends Target<F, VT, V>>(s: S, f: (v: V) => V): S {
+  setOver<S extends Target<F, VT, V>>(
+    s: S,
+    f: (v: V) => V,
+    transient = false
+  ): S {
     if (s === undefined) return s;
 
     switch (this.valueType) {
       case ValueType.Simple: {
+        if (transient) {
+          const tempS = s;
+          (tempS[this.focus] as any) = f((s as any)[this.focus]);
+          return tempS;
+        }
+
         return {
           ...s,
-          [this.focus]: f(s[this.focus] as V) as V
+          [this.focus]: f(s[this.focus as string])
         };
       }
       case ValueType.Array: {
-        let arr = (s[this.focus] as unknown) as V[];
+        const arr = (s[this.focus] as unknown) as V[];
         if (this.subFocus === undefined) {
+          if (transient) {
+            const tempS = s;
+            tempS[this.focus as string] = arr.map(el => f(el));
+            return tempS;
+          }
           return {
             ...s,
-            [this.focus]: arr.map(el => f(el))
+            [this.focus]: arr.map(el => f(el as V))
           };
         }
 
         const it = ((this.subFocus as unknown) as NumberSubFocusGenerator)();
 
-        arr = produce(arr, arrDraft => {
-          const arrDraftC = arrDraft;
+        if (transient) {
           let key = it.next();
 
           while (!key.done) {
-            arrDraftC[key.value as number] = f(arr[key.value as number]) as any;
+            arr[key.value as number] = f(arr[key.value as number]);
             key = it.next();
           }
-        });
-        return { ...s, [this.focus]: arr };
+          return s;
+        }
+
+        return {
+          ...s,
+          [this.focus]: produce(arr, arrDraft => {
+            let key = it.next();
+            const tempArrDraft = arrDraft;
+
+            while (!key.done) {
+              (tempArrDraft as any)[key.value as number] = f(
+                arrDraft[key.value as number] as V
+              );
+              key = it.next();
+            }
+          })
+        };
       }
       case ValueType.AssociativeArray: {
         let obj = s[this.focus];
         if (this.subFocus === undefined) {
-          const newObj = {};
+          if (transient) {
+            const tempS = s;
+            tempS[this.focus as string] = Object.fromEntries(
+              Object.entries(obj).map(([key, value]) => [key, f(value)])
+            );
+            return tempS;
+          }
 
-          Object.entries(obj).forEach(([key, value]) => {
-            newObj[key] = f(value);
-          });
-
-          return { ...s, [this.focus]: newObj };
+          return {
+            ...s,
+            [this.focus]: Object.fromEntries(
+              Object.entries(obj).map(([key, value]) => [key, f(value)])
+            )
+          };
         }
 
         const it = ((this.subFocus as unknown) as StringSubFocusGenerator)();
+
+        if (transient) {
+          let key = it.next();
+
+          while (!key.done) {
+            obj[key.value as string] = f(obj[key.value as string]);
+            key = it.next();
+          }
+          return s;
+        }
 
         obj = produce(obj, objDraft => {
           const objDraftC = objDraft;

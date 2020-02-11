@@ -27,7 +27,7 @@ export default class Telescope<
     viewFunc: <S extends R>(s: S) => VLU,
     viewOverFunc: <S extends R>(s: S, f: (v: IVLU) => void) => void,
     setFunc: <S extends R>(s: S, v: VLU) => S,
-    setOverFunc: <S extends R>(s: S, f: (v: IVLU) => IVLU) => S
+    setOverFunc: <S extends R>(s: S, f: (v: IVLU) => void) => S
   ) {
     super();
     this.valueType = valueType;
@@ -186,7 +186,7 @@ export function telescope(...args): any {
         return result;
       }, draftS);
 
-      applySetOnLens(focusedTrgt, args);
+      applySetOnLens(focusedTrgt, args, v);
     });
   };
 
