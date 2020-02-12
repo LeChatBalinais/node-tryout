@@ -103,7 +103,9 @@ export function telescope<
 export function telescope(...args): any {
   const applyViewOnLens = (t, lens): any => lens.view(t);
 
-  const applySetOnLensBase = (t, lens, v): void => lens.set(t, v);
+  const applySetOnLensBase = (t, lens, v): void => {
+    lens.set(t, v, true);
+  };
 
   const viewFunc = (s): any => {
     let applyLens = applyViewOnLens;
@@ -145,11 +147,11 @@ export function telescope(...args): any {
   const setFunc = (s, v): any => {
     let applyLens = applyViewOnLens;
 
-    let applySetOnLens = applySetOnLensBase;
+    const applySetOnLens = applySetOnLensBase;
 
     return produce(s, draftS => {
       const focusedTrgt = args.reduce((target, lens, i) => {
-        if (i === lens.length - 1) return target;
+        if (i === args.length - 1) return target;
         const result = applyLens(target, lens);
 
         switch (lens.getValueType()) {
@@ -157,11 +159,6 @@ export function telescope(...args): any {
             applyLens = (appLns => (trgt, lns): any => {
               return trgt.map(value => appLns(value, lns));
             })(applyLens);
-
-            applySetOnLens = (appLns => (trgt, lns, val): void => {
-              trgt.forEach((value, j) => appLns(value, lns, val[j]));
-            })(applySetOnLens);
-
             break;
           case ValueType.AssociativeArray:
             applyLens = (appLns => (trgt, lns): any =>
@@ -171,14 +168,6 @@ export function telescope(...args): any {
                   appLns(value, lns)
                 ])
               ))(applyLens);
-
-            applySetOnLens = (appLns => (trgt, lns, val): void => {
-              Object.values(trgt).forEach(([key, value]) => {
-                appLns(value, lns, val[key]);
-              });
-
-              trgt.foreach((value, j) => appLns(value, lns, v[j]));
-            })(applySetOnLens);
             break;
           default:
             break;
@@ -186,7 +175,25 @@ export function telescope(...args): any {
         return result;
       }, draftS);
 
-      applySetOnLens(focusedTrgt, args, v);
+      args.reduceRight((aps, lens, i) => {
+        if (i === args.length - 1) return aps;
+        switch (lens.getValueType()) {
+          case ValueType.Array:
+            return (appLns => (trgt, lns, val): void => {
+              trgt.forEach((value, j) => appLns(value, lns, val[j]));
+            })(aps);
+          case ValueType.AssociativeArray:
+            return (appLns => (trgt, lns, val): void => {
+              Object.entries(trgt).forEach(([key, value]) => {
+                appLns(value, lns, val[key]);
+              });
+
+              trgt.foreach((value, j) => appLns(value, lns, v[j]));
+            })(aps);
+          default:
+            return aps;
+        }
+      }, applySetOnLens)(focusedTrgt, args[args.length - 1], v);
     });
   };
 

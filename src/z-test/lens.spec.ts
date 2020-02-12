@@ -12,6 +12,14 @@ describe('Lens on simple value', () => {
     expect(a.set({ a: 3 }, 5)).toEqual({ a: 5 });
   });
 
+  test('transient set returns expected value', () => {
+    const obj = { a: 3 };
+
+    a.set(obj, 5, true);
+
+    expect(obj).toEqual({ a: 5 });
+  });
+
   let gv = 0;
 
   a.viewOver({ a: 3 }, (v: number) => {
@@ -24,6 +32,14 @@ describe('Lens on simple value', () => {
 
   test('setOver returns expected value', () => {
     expect(a.setOver({ a: 3 }, (v: number) => v + 2)).toEqual({ a: 5 });
+  });
+
+  test('transient setOver returns expected value', () => {
+    const obj = { a: 3 };
+
+    a.setOver(obj, (v: number) => v + 2, true);
+
+    expect(obj).toEqual({ a: 5 });
   });
 });
 
@@ -38,18 +54,32 @@ describe('Lens on full array container value', () => {
     expect(b.set({ b: [8, 7] }, [5, 6])).toEqual({ b: [5, 6] });
   });
 
-  let gv = 0;
+  test('transient set returns expected value', () => {
+    const obj = { b: [8, 7] };
 
-  b.viewOver({ b: [8, 7] }, (v: number) => {
-    gv += v;
+    b.set(obj, [5, 6], true);
+    expect(obj).toEqual({ b: [5, 6] });
   });
 
   test('viewOver returns expected value', () => {
+    let gv = 0;
+
+    b.viewOver({ b: [8, 7] }, (v: number) => {
+      gv += v;
+    });
     expect(gv).toBe(15);
   });
 
   test('setOver returns expected value', () => {
     expect(b.setOver({ b: [8, 7] }, (v: number) => v + 2)).toEqual({
+      b: [10, 9]
+    });
+  });
+
+  test('transient setOver returns expected value', () => {
+    const obj = { b: [8, 7] };
+    b.setOver(obj, (v: number) => v + 2, true);
+    expect(obj).toEqual({
       b: [10, 9]
     });
   });
@@ -81,6 +111,20 @@ describe('Lens on part of array container value', () => {
     });
   });
 
+  test('transient set returns expected value', () => {
+    const expectedRes = [];
+    expectedRes[1] = 0;
+    expectedRes[3] = 0;
+
+    const obj = { d: [1, 2, 3, 4] };
+
+    d.set(obj, expectedRes, true);
+
+    expect(obj).toEqual({
+      d: [1, 0, 3, 0]
+    });
+  });
+
   test('viewOver returns expected value', () => {
     let gv = 0;
 
@@ -92,6 +136,16 @@ describe('Lens on part of array container value', () => {
 
   test('setOver returns expected value', () => {
     expect(d.setOver({ d: [1, 2, 3, 4] }, (v: number) => v + 2)).toEqual({
+      d: [1, 4, 3, 6]
+    });
+  });
+
+  test('transient setOver returns expected value', () => {
+    const obj = { d: [1, 2, 3, 4] };
+
+    d.setOver(obj, (v: number) => v + 2, true);
+
+    expect(obj).toEqual({
       d: [1, 4, 3, 6]
     });
   });
@@ -110,18 +164,37 @@ describe('Lens on full associative array container value', () => {
     });
   });
 
-  let gv = 0;
+  test('set returns expected value', () => {
+    const obj = { b: { a: 8, b: 7 } };
 
-  b.viewOver({ b: { a: 8, b: 7 } }, (v: number) => {
-    gv += v;
+    b.set(obj, { a: 3, b: 4, c: 5 }, true);
+
+    expect(obj).toEqual({
+      b: { a: 3, b: 4, c: 5 }
+    });
   });
 
   test('viewOver returns expected value', () => {
+    let gv = 0;
+
+    b.viewOver({ b: { a: 8, b: 7 } }, (v: number) => {
+      gv += v;
+    });
     expect(gv).toBe(15);
   });
 
   test('setOver returns expected value', () => {
     expect(b.setOver({ b: { a: 8, b: 7 } }, (v: number) => v + 2)).toEqual({
+      b: { a: 10, b: 9 }
+    });
+  });
+
+  test('transient setOver returns expected value', () => {
+    const obj = { b: { a: 8, b: 7 } };
+
+    b.setOver(obj, (v: number) => v + 2, true);
+
+    expect(obj).toEqual({
       b: { a: 10, b: 9 }
     });
   });
@@ -144,18 +217,37 @@ describe('Lens on part of associative array container value', () => {
     });
   });
 
-  let gv = 0;
+  test('transient set returns expected value', () => {
+    const obj = { b: { a: 8, b: 7 } };
 
-  b.viewOver({ b: { a: 8, b: 7 } }, (v: number) => {
-    gv += v;
+    b.set(obj, { a: 3, c: 5 }, true);
+
+    expect(obj).toEqual({
+      b: { a: 3, b: 7 }
+    });
   });
 
   test('viewOver returns expected value', () => {
+    let gv = 0;
+
+    b.viewOver({ b: { a: 8, b: 7 } }, (v: number) => {
+      gv += v;
+    });
     expect(gv).toBe(8);
   });
 
   test('setOver returns expected value', () => {
     expect(b.setOver({ b: { a: 8, b: 7 } }, (v: number) => v + 2)).toEqual({
+      b: { a: 10, b: 7 }
+    });
+  });
+
+  test('transient setOver returns expected value', () => {
+    const obj = { b: { a: 8, b: 7 } };
+
+    b.setOver(obj, (v: number) => v + 2, true);
+
+    expect(obj).toEqual({
       b: { a: 10, b: 7 }
     });
   });

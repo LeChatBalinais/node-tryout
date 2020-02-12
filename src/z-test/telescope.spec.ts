@@ -44,17 +44,20 @@ describe('Telescope', () => {
     expect(result).toEqual([1, 2, 1, 2]);
   });
 
-  //   let gv = 0;
-
-  //   a.viewOver({ a: 3 }, (v: number) => {
-  //     gv = v;
-  //   });
-
-  //   test('viewOver returns expected value', () => {
-  //     expect(gv).toBe(3);
-  //   });
-
-  //   test('setOver returns expected value', () => {
-  //     expect(a.setOver({ a: 3 }, (v: number) => v + 2)).toEqual({ a: 5 });
-  //   });
+  test('set returns expected value', () => {
+    expect(
+      tlscpABC.set(obj, [
+        { ras: 1, dva: 5 },
+        { ras: 2, dva: 4 }
+      ])
+    ).toEqual({
+      a: {
+        b: [{ c: { ras: 1, dva: 5 } }, { c: { ras: 2, dva: 4 } }]
+      }
+    });
+  });
 });
+
+//   test('setOver returns expected value', () => {
+//     expect(a.setOver({ a: 3 }, (v: number) => v + 2)).toEqual({ a: 5 });
+//   });

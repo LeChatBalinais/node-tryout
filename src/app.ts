@@ -77,6 +77,7 @@
 import { lens } from './z/lens';
 import { ValueType } from './z/target';
 import { telescope } from './z/telescope';
+import produce from 'immer';
 
 const a = lens<{ b: number }>()('a', ValueType.Simple, undefined);
 const b = lens<number>()('b', ValueType.Simple, undefined);
@@ -112,3 +113,10 @@ const ads = [];
 ads[1] = 3;
 
 console.log(ads.map(v => 2 * v));
+
+console.log(
+  produce([1, 2], arr => {
+    const ar = arr;
+    ar[0] = 4;
+  })
+);

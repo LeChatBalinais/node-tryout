@@ -12,9 +12,13 @@ export default abstract class ILens<
 
   abstract viewOver<S extends R>(s: S, f: (v: IVLU) => void): void;
 
-  abstract set<S extends R>(s: S, v: VLU): S;
+  abstract set<S extends R>(s: S, v: VLU, transient?: boolean): S;
 
-  abstract setOver<S extends R>(s: S, f: (v: IVLU) => IVLU): S;
+  abstract setOver<S extends R>(
+    s: S,
+    f: (v: IVLU) => IVLU,
+    transient?: boolean
+  ): S;
 
   abstract getValueType(): VT;
 
