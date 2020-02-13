@@ -5,11 +5,17 @@ import ILens from './ilens';
 type NumberSubFocusGenerator = () => Generator<number, void, unknown>;
 type StringSubFocusGenerator = () => Generator<string, void, unknown>;
 
+type SubFocusGenerator<VT extends ValueType> = VT extends ValueType.Simple
+  ? undefined
+  : VT extends ValueType.Array
+  ? NumberSubFocusGenerator
+  : StringSubFocusGenerator;
+
 export default class Lens<
   V,
   F extends string,
   VT extends ValueType,
-  SF extends NumberSubFocusGenerator | StringSubFocusGenerator
+  SF extends SubFocusGenerator<VT>
 > extends ILens<F, VT, Value<VT, V>, V, Target<F, VT, V>> {
   focus: F;
 
@@ -332,7 +338,7 @@ export default class Lens<
 export function lens<V>(): <
   F extends string,
   VT extends ValueType = ValueType.Simple,
-  SF extends NumberSubFocusGenerator | StringSubFocusGenerator = undefined
+  SF extends SubFocusGenerator<VT> = undefined
 >(
   focus: F,
   valueType: VT,
@@ -341,7 +347,7 @@ export function lens<V>(): <
   return <
     F extends string,
     VT extends ValueType = ValueType.Simple,
-    SF extends NumberSubFocusGenerator | StringSubFocusGenerator = undefined
+    SF extends SubFocusGenerator<VT> = undefined
   >(
     focus: F,
     valueType: VT,

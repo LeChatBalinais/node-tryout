@@ -10,7 +10,7 @@ export type Value<VT extends ValueType, V> = VT extends ValueType.Simple
   ? V[]
   : { [ID in string]: V };
 
-export type TeleValue<V, VT> = VT extends ValueType.Simple
+export type TelescopedValue<V, VT> = VT extends ValueType.Simple
   ? V
   : VT extends ValueType.Array
   ? V[]

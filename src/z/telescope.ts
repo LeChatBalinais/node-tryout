@@ -1,6 +1,6 @@
 import produce from 'immer';
 import ILens from './ilens';
-import { ValueType, Target, TeleValue } from './target';
+import { ValueType, Target, TelescopedValue } from './target';
 
 export default class Telescope<
   F,
@@ -76,7 +76,7 @@ export function telescope<
 >(
   l1: ILens<F2, VT2, V2, IV2, R2>,
   l2: ILens<F1, VT1, V1, IV1, R1>
-): ILens<F2, VT2, TeleValue<TeleValue<IV1, VT1>, VT2>, IV1, R2>;
+): ILens<F2, VT2, TelescopedValue<TelescopedValue<IV1, VT1>, VT2>, IV1, R2>;
 
 export function telescope<
   F1 extends string,
@@ -98,7 +98,13 @@ export function telescope<
   l1: ILens<F3, VT3, V3, IV3, R3>,
   l2: ILens<F2, VT2, V2, IV2, R2>,
   l3: ILens<F1, VT1, V1, IV1, R1>
-): ILens<F3, VT3, TeleValue<TeleValue<TeleValue<IV1, VT1>, VT2>, VT3>, IV1, R3>;
+): ILens<
+  F3,
+  VT3,
+  TelescopedValue<TelescopedValue<TelescopedValue<IV1, VT1>, VT2>, VT3>,
+  IV1,
+  R3
+>;
 
 export function telescope(...args): any {
   const applyViewOnLens = (t, lens): any => lens.view(t);
@@ -198,7 +204,11 @@ export function telescope(...args): any {
   };
 
   const setOverFunc = (s, f): any => {
-    return s;
+    const setOver = args.reduceRight((currentSetOver, lens): any => {
+      return (trgt): any => lens.setOver(trgt, currentSetOver, true);
+    }, f);
+
+    return produce(s, draftS => setOver(draftS));
   };
 
   return new Telescope<string, ValueType, any, any, any>(
