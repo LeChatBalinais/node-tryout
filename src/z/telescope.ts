@@ -1,6 +1,7 @@
 import produce from 'immer';
 import ILens from './ilens';
 import { ValueType, Target, TelescopedValue } from './target';
+import { view } from '../lens';
 
 export default class Telescope<
   F,
@@ -106,39 +107,128 @@ export function telescope<
   R3
 >;
 
-export function telescope(...args): any {
-  const applyViewOnLens = (t, lens): any => lens.view(t);
+export function telescope<
+  F1 extends string,
+  VT1 extends ValueType,
+  V1,
+  IV1,
+  R1,
+  F2 extends string,
+  VT2 extends ValueType,
+  V2,
+  IV2 extends Target<F1, VT1, IV1>,
+  R2,
+  F3 extends string,
+  VT3 extends ValueType,
+  V3,
+  IV3 extends Target<F2, VT2, IV2>,
+  R3,
+  F4 extends string,
+  VT4 extends ValueType,
+  V4,
+  IV4 extends Target<F3, VT3, IV3>,
+  R4
+>(
+  l1: ILens<F4, VT4, V4, IV4, R4>,
+  l2: ILens<F3, VT3, V3, IV3, R3>,
+  l3: ILens<F2, VT2, V2, IV2, R2>,
+  l4: ILens<F1, VT1, V1, IV1, R1>
+): ILens<
+  F4,
+  VT4,
+  TelescopedValue<
+    TelescopedValue<TelescopedValue<TelescopedValue<IV1, VT1>, VT2>, VT3>,
+    VT4
+  >,
+  IV1,
+  R4
+>;
 
+export function telescope<
+  F1 extends string,
+  VT1 extends ValueType,
+  V1,
+  IV1,
+  R1,
+  F2 extends string,
+  VT2 extends ValueType,
+  V2,
+  IV2 extends Target<F1, VT1, IV1>,
+  R2,
+  F3 extends string,
+  VT3 extends ValueType,
+  V3,
+  IV3 extends Target<F2, VT2, IV2>,
+  R3,
+  F4 extends string,
+  VT4 extends ValueType,
+  V4,
+  IV4 extends Target<F3, VT3, IV3>,
+  R4,
+  F5 extends string,
+  VT5 extends ValueType,
+  V5,
+  IV5 extends Target<F4, VT4, IV4>,
+  R5
+>(
+  l1: ILens<F5, VT5, V5, IV5, R5>,
+  l2: ILens<F4, VT4, V4, IV4, R4>,
+  l3: ILens<F3, VT3, V3, IV3, R3>,
+  l4: ILens<F2, VT2, V2, IV2, R2>,
+  l5: ILens<F1, VT1, V1, IV1, R1>
+): ILens<
+  F5,
+  VT5,
+  TelescopedValue<
+    TelescopedValue<
+      TelescopedValue<TelescopedValue<TelescopedValue<IV1, VT1>, VT2>, VT3>,
+      VT4
+    >,
+    VT5
+  >,
+  IV1,
+  R5
+>;
+
+export function telescope(...args): any {
   const applySetOnLensBase = (t, lens, v): void => {
     lens.set(t, v, true);
   };
 
-  const viewFunc = (s): any => {
-    let applyLens = applyViewOnLens;
+  const applyViewBase = (t, lens): any => {
+    return lens.view(t);
+  };
 
-    return args.reduce((target, lens) => {
-      const result = applyLens(target, lens);
+  const views = [];
 
-      switch (lens.getValueType()) {
+  for (let i = args.length - 2; i >= 0; i -= 1) {
+    let applyView = applyViewBase;
+
+    for (let j = i; j >= 0; j -= 1) {
+      switch (args[j].getValueType()) {
         case ValueType.Array:
-          applyLens = (appLns => (trgt, lns): any => {
-            return trgt.map(value => appLns(value, lns));
-          })(applyLens);
+          applyView = (v => (trgt, lns): any => {
+            return trgt.map(value => v(value, lns));
+          })(applyView);
           break;
         case ValueType.AssociativeArray:
-          applyLens = (appLns => (trgt, lns): any =>
-            Object.fromEntries(
-              Object.entries(trgt).map(([key, value]) => [
-                key,
-                appLns(value, lns)
-              ])
-            ))(applyLens);
+          applyView = (v => (trgt, lns): any => {
+            return Object.fromEntries(
+              Object.entries(trgt).map(([key, value]) => [key, v(value, lns)])
+            );
+          })(applyView);
           break;
         default:
           break;
       }
+    }
+    views.unshift(((k, appV) => t => appV(t, args[k]))(i + 1, applyView));
+  }
+  views.unshift(t => applyViewBase(t, args[0]));
 
-      return result;
+  const viewFunc = (s): any => {
+    return views.reduce((target, v) => {
+      return v(target);
     }, s);
   };
 
@@ -151,36 +241,13 @@ export function telescope(...args): any {
   };
 
   const setFunc = (s, v): any => {
-    let applyLens = applyViewOnLens;
-
     const applySetOnLens = applySetOnLensBase;
 
     return produce(s, draftS => {
-      const focusedTrgt = args.reduce((target, lens, i) => {
+      const focusedTrgt = views.reduce((target, currentView, i) => {
         if (i === args.length - 1) return target;
-        const result = applyLens(target, lens);
-
-        switch (lens.getValueType()) {
-          case ValueType.Array:
-            applyLens = (appLns => (trgt, lns): any => {
-              return trgt.map(value => appLns(value, lns));
-            })(applyLens);
-            break;
-          case ValueType.AssociativeArray:
-            applyLens = (appLns => (trgt, lns): any =>
-              Object.fromEntries(
-                Object.entries(trgt).map(([key, value]) => [
-                  key,
-                  appLns(value, lns)
-                ])
-              ))(applyLens);
-            break;
-          default:
-            break;
-        }
-        return result;
+        return currentView(target);
       }, draftS);
-
       args.reduceRight((aps, lens, i) => {
         if (i === args.length - 1) return aps;
         switch (lens.getValueType()) {

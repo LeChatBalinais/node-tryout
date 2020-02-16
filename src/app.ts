@@ -1,3 +1,7 @@
+import { lens } from './z/lens';
+import { ValueType } from './z/target';
+import { telescope } from './z/telescope';
+
 // import { lens } from './lens';
 // import { getter } from './getter';
 // import { filter } from './filter';
@@ -31,92 +35,58 @@
 // const r = reducer(rd);
 
 // console.log(r(o));
-// import { staticLens } from './x/static-lens';
-// import { dynamicLens } from './x/dynamic-lens';
-// import { lensSequence } from './x/lens-sequence';
 
-// const a = staticLens<{ b: number }>()('a');
-// const b = staticLens<number>()('b');
+interface E {
+  e: number;
+}
 
-// console.log(a.get({ a: { b: 3 } }));
-// console.log(a.set({ a: { b: 3 } }, { b: 5 }));
+interface D {
+  d: { [ID in string]: E };
+}
 
-// const ab = lensSequence([a, b]);
+interface C {
+  c: D[];
+}
 
-// console.log('seq: ', ab.get({ a: { b: 3 } }));
+interface B {
+  b: C[];
+}
 
-// const ds = [0, 2];
+interface A {
+  a: { [ID in string]: B };
+}
 
-// const ad = (mm: number[]) => {
-//   return (): number[] => {
-//     return mm;
-//   };
-// };
+function* keyGenC() {
+  yield 0;
+}
 
-// const generator = ad([0, 1]);
+function* keyGenD() {
+  yield 'Dras';
+}
 
-// const gen = (): string[] => {
-//   return ['e', 'm'];
-// };
+const a = lens<B>()('a', ValueType.AssociativeArray, undefined);
+const b = lens<C>()('b', ValueType.Array, undefined);
+const c = lens<D>()('c', ValueType.Array, keyGenC);
+const d = lens<E>()('d', ValueType.AssociativeArray, keyGenD);
+const e = lens<number>()('e', ValueType.Simple, undefined);
 
-// const m = dynamicLens<string>()(generator);
+const tlscp = telescope(a, b, c, d, e);
 
-// const f = dynamicLens<number>()(gen);
+const obj = {
+  a: {
+    Aras: {
+      b: [{ c: [{ d: { Dras: { e: 1 } } }] }]
+    },
+    Adva: {
+      b: [
+        { c: [{ d: { Dras: { e: 1 }, Ddva: { e: 2 } } }] },
+        { c: [{ d: { Dras: { e: 1 } } }] }
+      ]
+    },
+    Atri: {
+      b: [{ c: [{ d: { Dras: { e: 1 } } }] }]
+    }
+  }
+};
 
-// console.log(m.get(['s', 'd', 'g']));
-
-// console.log(m.get([]));
-// console.log(m.set(['s', 'd', 'g'], ['u', 'v']));
-
-// console.log(f.get({ e: 3, ds: 9, m: 8 }));
-// console.log(f.set({ e: 3, ds: 9, m: 8 }, [7, 4]));
-
-// console.log({ a: 1, b: 'set', c: undefined });
-// const m;
-
-import { lens } from './z/lens';
-import { ValueType } from './z/target';
-import { telescope } from './z/telescope';
-import produce from 'immer';
-
-const a = lens<{ b: number }>()('a', ValueType.Simple, undefined);
-const b = lens<number>()('b', ValueType.Simple, undefined);
-const d = lens<{ c: number[] }>()('d', ValueType.Simple, undefined);
-const c = lens<number>()('c', ValueType.Array, undefined);
-const e = lens<{ f: number }>()('e', ValueType.Array, undefined);
-const f = lens<number>()('f', ValueType.Simple, undefined);
-
-const g = lens<{ h: { [ID in string]: number } }>()(
-  'g',
-  ValueType.Simple,
-  undefined
-);
-const h = lens<number>()('h', ValueType.AssociativeArray, undefined);
-
-const i = lens<{ j: number }>()('i', ValueType.AssociativeArray, undefined);
-
-const j = lens<number>()('j', ValueType.Simple, undefined);
-
-const tlscpAB = telescope(a, b);
-
-const tlscpDC = telescope(d, c);
-
-const tlscpEF = telescope(e, f);
-
-const tlscpGH = telescope(g, h);
-
-const tlscpIJ = telescope(i, j);
-
-// console.log(tlscp.view({ a: { b: 3 } }));
-
-const ads = [];
-ads[1] = 3;
-
-console.log(ads.map(v => 2 * v));
-
-console.log(
-  produce([1, 2], arr => {
-    const ar = arr;
-    ar[0] = 4;
-  })
-);
+console.log(tlscp.view(obj));
