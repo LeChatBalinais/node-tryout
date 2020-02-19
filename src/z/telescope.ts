@@ -1,7 +1,6 @@
 import produce from 'immer';
 import ILens from './ilens';
 import { ValueType, Target, TelescopedValue } from './target';
-import { view } from '../lens';
 
 export default class Telescope<
   F,
@@ -191,10 +190,6 @@ export function telescope<
 >;
 
 export function telescope(...args): any {
-  const applySetOnLensBase = (t, lens, v): void => {
-    lens.set(t, v, true);
-  };
-
   const applyViewBase = (t, lens): any => {
     return lens.view(t);
   };
@@ -226,6 +221,31 @@ export function telescope(...args): any {
   }
   views.unshift(t => applyViewBase(t, args[0]));
 
+  const applySetBase = (t, lens, v): any => {
+    return lens.set(t, v, true);
+  };
+
+  let applySet = applySetBase;
+
+  for (let i = args.length - 2; i >= 0; i -= 1) {
+    switch (args[i].getValueType()) {
+      case ValueType.Array:
+        applySet = (appLns => (trgt, lns, val): void => {
+          trgt.forEach((value, j) => appLns(value, lns, val[j]));
+        })(applySet);
+        break;
+      case ValueType.AssociativeArray:
+        applySet = (appLns => (trgt, lns, val): void => {
+          Object.entries(trgt).forEach(([key, value]) => {
+            appLns(value, lns, val[key]);
+          });
+        })(applySet);
+        break;
+      default:
+        break;
+    }
+  }
+
   const viewFunc = (s): any => {
     return views.reduce((target, v) => {
       return v(target);
@@ -241,32 +261,13 @@ export function telescope(...args): any {
   };
 
   const setFunc = (s, v): any => {
-    const applySetOnLens = applySetOnLensBase;
-
     return produce(s, draftS => {
-      const focusedTrgt = views.reduce((target, currentView, i) => {
-        if (i === args.length - 1) return target;
-        return currentView(target);
-      }, draftS);
-      args.reduceRight((aps, lens, i) => {
-        if (i === args.length - 1) return aps;
-        switch (lens.getValueType()) {
-          case ValueType.Array:
-            return (appLns => (trgt, lns, val): void => {
-              trgt.forEach((value, j) => appLns(value, lns, val[j]));
-            })(aps);
-          case ValueType.AssociativeArray:
-            return (appLns => (trgt, lns, val): void => {
-              Object.entries(trgt).forEach(([key, value]) => {
-                appLns(value, lns, val[key]);
-              });
+      let focusedTrgt = draftS;
 
-              trgt.foreach((value, j) => appLns(value, lns, v[j]));
-            })(aps);
-          default:
-            return aps;
-        }
-      }, applySetOnLens)(focusedTrgt, args[args.length - 1], v);
+      for (let i = 0; i < args.length - 1; i += 1) {
+        focusedTrgt = views[i](focusedTrgt);
+      }
+      applySet(focusedTrgt, args[args.length - 1], v);
     });
   };
 

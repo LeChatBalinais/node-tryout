@@ -246,3 +246,123 @@ describe('Subfocused deep telescope', () => {
     });
   });
 });
+
+describe('Subfocused deep telescope', () => {
+  interface E {
+    e: number;
+  }
+
+  interface D {
+    d: { [ID in string]: E };
+  }
+
+  interface C {
+    c: D[];
+  }
+
+  interface B {
+    b: C[];
+  }
+
+  interface A {
+    a: { [ID in string]: B };
+  }
+
+  function* keyGenC() {
+    yield 0;
+  }
+
+  function* keyGenD() {
+    yield 'Dras';
+  }
+
+  const a = lens<B>()('a', ValueType.AssociativeArray, undefined);
+  const b = lens<C>()('b', ValueType.Array, undefined);
+  const c = lens<D>()('c', ValueType.Array, keyGenC);
+  const d = lens<E>()('d', ValueType.AssociativeArray, keyGenD);
+
+  const tlscp = telescope(a, b, c, d);
+
+  const obj = {
+    a: {
+      Aras: {
+        b: [{ c: [{ d: { Dras: { e: 1 } } }] }]
+      },
+      Adva: {
+        b: [
+          { c: [{ d: { Dras: { e: 2 }, Ddva: { e: 3 } } }] },
+          { c: [{ d: { Dras: { e: 4 } } }] }
+        ]
+      },
+      Atri: {
+        b: [{ c: [{ d: { Dras: { e: 5 } } }] }]
+      }
+    }
+  };
+
+  test('view returns expected value', () => {
+    expect(tlscp.view(obj)).toEqual({
+      Aras: [[{ Dras: { e: 1 } }]],
+      Adva: [[{ Dras: { e: 2 } }], [{ Dras: { e: 4 } }]],
+      Atri: [[{ Dras: { e: 5 } }]]
+    });
+  });
+
+  test('viewOver returns expected value', () => {
+    const result = [];
+
+    tlscp.viewOver(obj, (v: E): void => {
+      result.push(v);
+    });
+
+    expect(result).toEqual([{ e: 1 }, { e: 2 }, { e: 4 }, { e: 5 }]);
+  });
+
+  test('set returns expected value', () => {
+    expect(
+      tlscp.set(obj, {
+        Aras: [[{ Dras: { e: 0 } }]],
+        Adva: [[{ Dras: { e: 1 } }], [{ Dras: { e: 3 } }]],
+        Atri: [[{ Dras: { e: 4 } }]]
+      })
+    ).toEqual({
+      a: {
+        Aras: {
+          b: [{ c: [{ d: { Dras: { e: 0 } } }] }]
+        },
+        Adva: {
+          b: [
+            { c: [{ d: { Dras: { e: 1 }, Ddva: { e: 3 } } }] },
+            { c: [{ d: { Dras: { e: 3 } } }] }
+          ]
+        },
+        Atri: {
+          b: [{ c: [{ d: { Dras: { e: 4 } } }] }]
+        }
+      }
+    });
+  });
+
+  test('setOver returns expected value', () => {
+    expect(
+      tlscp.setOver(obj, v => ({
+        e: v.e + 1
+      }))
+    ).toEqual({
+      a: {
+        Aras: {
+          b: [{ c: [{ d: { Dras: { e: 2 } } }] }]
+        },
+        Adva: {
+          b: [
+            { c: [{ d: { Dras: { e: 3 }, Ddva: { e: 3 } } }] },
+            { c: [{ d: { Dras: { e: 5 } } }] }
+          ]
+        },
+        Atri: {
+          b: [{ c: [{ d: { Dras: { e: 6 } } }] }]
+        }
+      }
+    });
+  });
+});
