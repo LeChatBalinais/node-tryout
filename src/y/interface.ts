@@ -1,34 +1,25 @@
-
-import { ValueType } from '../z/target';
-
-
-export interface View<R, V> {
-
-    view: <S extends R>(s: S) => V;
-
+export interface View<V, R> {
+  view: <S extends R>(s: S) => V;
 }
 
+export interface ViewOver<V, R> {
+  viewOver: <S extends R>(s: S, f: (v: V) => void) => void;
+}
 
-export default abstract class ILens<
-    F,
-    VT extends ValueType,
-    VLU,
-    IVLU,
-    R
-    > extends View<VLU, IVLU, R> {
-    abstract view<S extends R>(s: S): VLU;
+export interface Set<V, R> {
+  set: <S extends R>(s: S, v: V, transient?: boolean) => S;
+}
 
-    abstract viewOver<S extends R>(s: S, f: (v: IVLU) => void): void;
+export interface SetOver<V, R> {
+  setOver: <S extends R>(s: S, f: (v: V) => V, transient?: boolean) => S;
+}
 
-    abstract set<S extends R>(s: S, v: VLU, transient?: boolean): S;
-
-    abstract setOver<S extends R>(
-        s: S,
-        f: (v: IVLU) => IVLU,
-        transient?: boolean
-    ): S;
-
-    abstract getValueType(): VT;
-
-    abstract getFocus(): F;
+export interface Lens<F, SF, VT, V, CV, R>
+  extends View<CV, R>,
+    ViewOver<V, R>,
+    Set<CV, R>,
+    SetOver<V, R> {
+  focus: F;
+  valueType: VT;
+  subFocus?: SF;
 }
