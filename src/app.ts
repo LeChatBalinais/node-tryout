@@ -1,6 +1,6 @@
-import { lens } from './z/lens';
-import { ValueType } from './z/target';
-import { telescope } from './z/telescope';
+// import { lens } from './z/lens';
+// import { ValueType } from './z/target';
+// import { telescope } from './z/telescope';
 
 // import { lens } from './lens';
 // import { getter } from './getter';
