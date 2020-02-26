@@ -1,20 +1,28 @@
 import produce from 'immer';
 import { ValueType, Target, Value } from '../z/target';
 
-type NumberSubFocusGeneratorNoParams = () => Generator<number, void, unknown>;
-type NumberSubFocusGeneratorWithParams<P> = (
+export type NumberSubFocusGeneratorNoParams = () => Generator<
+  number,
+  void,
+  unknown
+>;
+export type NumberSubFocusGeneratorWithParams<P> = (
   param: P
 ) => Generator<number, void, unknown>;
 
-type StringSubFocusGeneratorNoParams = () => Generator<string, void, unknown>;
-type StringSubFocusGeneratorWithParams<P> = (
+export type StringSubFocusGeneratorNoParams = () => Generator<
+  string,
+  void,
+  unknown
+>;
+export type StringSubFocusGeneratorWithParams<P> = (
   param: P
 ) => Generator<string, void, unknown>;
 
-type NumberSubFocusGenerator<P> = P extends undefined | unknown
+export type NumberSubFocusGenerator<P> = P extends undefined
   ? NumberSubFocusGeneratorNoParams
   : NumberSubFocusGeneratorWithParams<P>;
-type StringSubFocusGenerator<P> = P extends undefined | unknown
+export type StringSubFocusGenerator<P> = P extends undefined
   ? StringSubFocusGeneratorNoParams
   : StringSubFocusGeneratorWithParams<P>;
 
@@ -24,7 +32,7 @@ type SubFocusGenerator<VT extends ValueType, P> = VT extends ValueType.Simple
   ? NumberSubFocusGenerator<P>
   : StringSubFocusGenerator<P>;
 
-type ViewFunc<V, R, P> = P extends undefined | unknown
+type ViewFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S) => V
   : <S extends R>(s: S, param: P) => V;
 
@@ -32,25 +40,37 @@ export interface View<V, R, P> {
   view: ViewFunc<V, R, P>;
 }
 
-export interface ViewOver<V, R> {
-  viewOver: <S extends R>(s: S, f: (v: V) => void) => void;
+type ViewOverFunc<V, R, P> = P extends undefined
+  ? <S extends R>(s: S, f: (v: V) => void) => void
+  : <S extends R>(s: S, f: (v: V) => void, param: P) => void;
+
+export interface ViewOver<V, R, P> {
+  viewOver: ViewOverFunc<V, R, P>;
 }
 
-export interface Set<V, R> {
-  set: <S extends R>(s: S, v: V) => S;
-  setTransient: <S extends R>(s: S, v: V) => S;
+type SetFunc<V, R, P> = P extends undefined
+  ? <S extends R>(s: S, v: V) => S
+  : <S extends R>(s: S, v: V, param: P) => S;
+
+export interface Set<V, R, P> {
+  set: SetFunc<V, R, P>;
+  setTransient: SetFunc<V, R, P>;
 }
 
-export interface SetOver<V, R> {
-  setOver: <S extends R>(s: S, f: (v: V) => V) => S;
-  setOverTransient: <S extends R>(s: S, f: (v: V) => V) => S;
+type SetOverFunc<V, R, P> = P extends undefined
+  ? <S extends R>(s: S, f: (v: V) => V) => S
+  : <S extends R>(s: S, f: (v: V) => V, param: P) => S;
+
+export interface SetOver<V, R, P> {
+  setOver: SetOverFunc<V, R, P>;
+  setOverTransient: SetOverFunc<V, R, P>;
 }
 
-export interface Lens<F, P, VT extends ValueType, V, CV, R>
+export interface Lens<F, VT extends ValueType, V, CV, R, P = undefined>
   extends View<CV, R, P>,
-    ViewOver<V, R>,
-    Set<CV, R>,
-    SetOver<V, R> {
+    ViewOver<V, R, P>,
+    Set<CV, R, P>,
+    SetOver<V, R, P> {
   focus: F;
   valueType: VT;
   subFocus?: SubFocusGenerator<VT, P>;
@@ -60,7 +80,6 @@ type LensCreatorOne<V> = <F extends string>(
   focus: F
 ) => Lens<
   F,
-  undefined,
   ValueType.Simple,
   V,
   Value<ValueType.Simple, V>,
@@ -73,17 +92,17 @@ type LensCreatorTwo<V> = <
 >(
   focus: F,
   valueType: VT
-) => Lens<F, undefined, VT, V, Value<VT, V>, Target<F, VT, V>>;
+) => Lens<F, VT, V, Value<VT, V>, Target<F, VT, V>>;
 
 type LensCreatorThree<V> = <
   F extends string,
   VT extends ValueType.Array | ValueType.AssociativeArray,
-  P
+  P = undefined
 >(
   focus: F,
   valueType: VT,
   subFocus: SubFocusGenerator<VT, P>
-) => Lens<F, P, VT, V, Value<VT, V>, Target<F, VT, V>>;
+) => Lens<F, VT, V, Value<VT, V>, Target<F, VT, V>, P>;
 
 export function lens<V>(): LensCreatorOne<V> &
   LensCreatorTwo<V> &
@@ -164,7 +183,11 @@ export function lens<V>(): any {
           return undefined;
       }
     },
-    viewOver: <S extends Target<F, VT, V>>(s: S, f: (v: V) => void): void => {
+    viewOver: <S extends Target<F, VT, V>>(
+      s: S,
+      f: (v: V) => void,
+      param?: P
+    ): void => {
       switch (valueType) {
         case ValueType.Simple: {
           f(s[focus] as V);
@@ -178,7 +201,14 @@ export function lens<V>(): any {
             break;
           }
 
-          const it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let key = it.next();
           while (!key.done) {
@@ -198,7 +228,14 @@ export function lens<V>(): any {
             break;
           }
 
-          const it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as StringSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let key = it.next();
           while (!key.done) {
@@ -211,7 +248,7 @@ export function lens<V>(): any {
           break;
       }
     },
-    set: <S extends Target<F, VT, V>>(s: S, v: Value<VT, V>): S => {
+    set: <S extends Target<F, VT, V>>(s: S, v: Value<VT, V>, param?: P): S => {
       if (s === undefined) return s;
 
       switch (valueType) {
@@ -223,7 +260,14 @@ export function lens<V>(): any {
             return { ...s, [focus]: v };
           }
 
-          const it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let arr = s[focus];
 
@@ -243,7 +287,14 @@ export function lens<V>(): any {
             return { ...s, [focus]: v };
           }
 
-          const it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as StringSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let obj = s[focus];
 
@@ -262,7 +313,11 @@ export function lens<V>(): any {
           return undefined;
       }
     },
-    setTransient: <S extends Target<F, VT, V>>(s: S, v: Value<VT, V>): S => {
+    setTransient: <S extends Target<F, VT, V>>(
+      s: S,
+      v: Value<VT, V>,
+      param?: P
+    ): S => {
       if (s === undefined) return s;
 
       switch (valueType) {
@@ -278,7 +333,14 @@ export function lens<V>(): any {
             return tempS;
           }
 
-          const it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           const arr = s[focus];
 
@@ -297,7 +359,14 @@ export function lens<V>(): any {
             return tempS;
           }
 
-          const it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as StringSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           const obj = s[focus];
 
@@ -313,7 +382,11 @@ export function lens<V>(): any {
           return undefined;
       }
     },
-    setOver: <S extends Target<F, VT, V>>(s: S, f: (v: V) => V): S => {
+    setOver: <S extends Target<F, VT, V>>(
+      s: S,
+      f: (v: V) => V,
+      param?: P
+    ): S => {
       if (s === undefined) return s;
 
       switch (valueType) {
@@ -332,7 +405,14 @@ export function lens<V>(): any {
             };
           }
 
-          const it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           return {
             ...s,
@@ -360,7 +440,14 @@ export function lens<V>(): any {
             };
           }
 
-          const it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as StringSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           obj = produce(obj, objDraft => {
             const objDraftC = objDraft;
@@ -377,7 +464,11 @@ export function lens<V>(): any {
           return undefined;
       }
     },
-    setOverTransient: <S extends Target<F, VT, V>>(s: S, f: (v: V) => V): S => {
+    setOverTransient: <S extends Target<F, VT, V>>(
+      s: S,
+      f: (v: V) => V,
+      param?: P
+    ): S => {
       if (s === undefined) return s;
 
       switch (valueType) {
@@ -394,7 +485,14 @@ export function lens<V>(): any {
             return tempS;
           }
 
-          const it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as NumberSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let key = it.next();
 
@@ -414,7 +512,14 @@ export function lens<V>(): any {
             return tempS;
           }
 
-          const it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          let it: any;
+
+          if (param === undefined)
+            it = ((subFocus as unknown) as StringSubFocusGeneratorNoParams)();
+          else
+            it = ((subFocus as unknown) as StringSubFocusGeneratorWithParams<
+              P
+            >)(param);
 
           let key = it.next();
 

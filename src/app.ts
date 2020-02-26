@@ -1,3 +1,7 @@
+import { telescope } from './y/telescope';
+import { lens } from './y/lens';
+import { ValueType } from './z/target';
+
 // import { lens } from './z/lens';
 // import { ValueType } from './z/target';
 // import { telescope } from './z/telescope';
@@ -35,3 +39,21 @@
 // const r = reducer(rd);
 
 // console.log(r(o));
+
+type B = { b: number[] };
+
+function* keyGenA(param: { ap: string }) {
+  yield '1';
+  yield '3';
+}
+
+const a = lens<B>()('a', ValueType.AssociativeArray, keyGenA);
+
+function* keyGenB(param: { bp: number }) {
+  yield 1;
+  yield 3;
+}
+
+const b = lens<number>()('b', ValueType.Array, keyGenB);
+
+const tlscp = telescope(a, b);
