@@ -34,7 +34,7 @@ type SubFocusGenerator<VT extends ValueType, P> = VT extends ValueType.Simple
 
 type ViewFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S) => V
-  : <S extends R>(s: S, param: P) => V;
+  : <S extends R, PRM extends P>(s: S, param: PRM) => V;
 
 export interface View<V, R, P> {
   view: ViewFunc<V, R, P>;
@@ -42,7 +42,7 @@ export interface View<V, R, P> {
 
 type ViewOverFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S, f: (v: V) => void) => void
-  : <S extends R>(s: S, f: (v: V) => void, param: P) => void;
+  : <S extends R, PRM extends P>(s: S, f: (v: V) => void, param: PRM) => void;
 
 export interface ViewOver<V, R, P> {
   viewOver: ViewOverFunc<V, R, P>;
@@ -50,7 +50,7 @@ export interface ViewOver<V, R, P> {
 
 type SetFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S, v: V) => S
-  : <S extends R>(s: S, v: V, param: P) => S;
+  : <S extends R, PRM extends P>(s: S, v: V, param: PRM) => S;
 
 export interface Set<V, R, P> {
   set: SetFunc<V, R, P>;
@@ -59,7 +59,7 @@ export interface Set<V, R, P> {
 
 type SetOverFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S, f: (v: V) => V) => S
-  : <S extends R>(s: S, f: (v: V) => V, param: P) => S;
+  : <S extends R, PRM extends P>(s: S, f: (v: V) => V, param: PRM) => S;
 
 export interface SetOver<V, R, P> {
   setOver: SetOverFunc<V, R, P>;

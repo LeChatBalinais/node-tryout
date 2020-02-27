@@ -2,10 +2,6 @@ import { telescope } from './y/telescope';
 import { lens } from './y/lens';
 import { ValueType } from './z/target';
 
-// import { lens } from './z/lens';
-// import { ValueType } from './z/target';
-// import { telescope } from './z/telescope';
-
 // import { lens } from './lens';
 // import { getter } from './getter';
 // import { filter } from './filter';
@@ -42,18 +38,42 @@ import { ValueType } from './z/target';
 
 type B = { b: number[] };
 
-function* keyGenA(param: { ap: string }) {
-  yield '1';
-  yield '3';
+const s = { a: { one: { b: [3, 5] } } };
+
+function* keyGenA() {
+  yield 'one';
 }
 
 const a = lens<B>()('a', ValueType.AssociativeArray, keyGenA);
 
-function* keyGenB(param: { bp: number }) {
-  yield 1;
-  yield 3;
+function* keyGenB({ bp }: { bp: number }) {
+  yield bp;
 }
 
 const b = lens<number>()('b', ValueType.Array, keyGenB);
 
 const tlscp = telescope(a, b);
+
+tlscp.setTransient(s, { one: [, 9] }, { ap: 'one', bp: 1 });
+
+console.log(tlscp.view(s, { ap: 'one', bp: 1 }));
+
+tlscp.setOverTransient(s, (n: number) => 17, { ap: 'one', bp: 1 });
+
+console.log(tlscp.view(s, { ap: 'one', bp: 1 }));
+
+let result = 0;
+
+console.log(tlscp.set(s, { one: [, 6] }, { ap: 'one', bp: 1 }).a);
+
+console.log(tlscp.setOver(s, (n: number) => 13, { ap: 'one', bp: 1 }).a);
+
+tlscp.viewOver(
+  s,
+  (n: number): void => {
+    result += n;
+  },
+  { ap: 'one', bp: 1 }
+);
+
+console.log(result);
