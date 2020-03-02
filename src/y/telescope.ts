@@ -2,7 +2,7 @@ import produce from 'immer';
 import { Lens } from './lens';
 import { TelescopedValue, Target, ValueType } from '../z/target';
 
-type TelescopedParam<P1, P2> = P1 extends undefined
+export type TelescopedParam<P1, P2> = P1 extends undefined
   ? P2
   : P2 extends undefined
   ? P1

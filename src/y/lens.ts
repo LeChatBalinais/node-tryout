@@ -26,7 +26,10 @@ export type StringSubFocusGenerator<P> = P extends undefined
   ? StringSubFocusGeneratorNoParams
   : StringSubFocusGeneratorWithParams<P>;
 
-type SubFocusGenerator<VT extends ValueType, P> = VT extends ValueType.Simple
+export type SubFocusGenerator<
+  VT extends ValueType,
+  P
+> = VT extends ValueType.Simple
   ? undefined
   : VT extends ValueType.Array
   ? NumberSubFocusGenerator<P>
