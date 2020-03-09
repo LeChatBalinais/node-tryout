@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { ValueType, Target, Value } from '../z/target';
+import { Focus, ValueTypeArray, ValueType, Target, Value } from '../z/target';
 
 export type NumberSubFocusGeneratorNoParams = () => Generator<
   number,
@@ -27,13 +27,15 @@ export type StringSubFocusGenerator<P> = P extends undefined
   : StringSubFocusGeneratorWithParams<P>;
 
 export type SubFocusGenerator<
-  VT extends ValueType,
+  VT extends ValueTypeArray,
   P
 > = VT extends ValueType.Simple
   ? undefined
   : VT extends ValueType.Array
   ? NumberSubFocusGenerator<P>
-  : StringSubFocusGenerator<P>;
+  : VT extends ValueType.AssociativeArray
+  ? StringSubFocusGenerator<P>
+  : never;
 
 type ViewFunc<V, R, P> = P extends undefined
   ? <S extends R>(s: S) => V
@@ -43,9 +45,17 @@ export interface View<V, R, P> {
   view: ViewFunc<V, R, P>;
 }
 
+type ViewingFunction<V> = V extends any[]
+  ? { [K in keyof V]: ViewingFunction<V[K]> }
+  : (v: V) => void;
+
 type ViewOverFunc<V, R, P> = P extends undefined
-  ? <S extends R>(s: S, f: (v: V) => void) => void
-  : <S extends R, PRM extends P>(s: S, f: (v: V) => void, param: PRM) => void;
+  ? <S extends R>(s: S, f: ViewingFunction<V>) => void
+  : <S extends R, PRM extends P>(
+      s: S,
+      f: ViewingFunction<V>,
+      param: PRM
+    ) => void;
 
 export interface ViewOver<V, R, P> {
   viewOver: ViewOverFunc<V, R, P>;
@@ -60,20 +70,27 @@ export interface Set<V, R, P> {
   setTransient: SetFunc<V, R, P>;
 }
 
+type SettingFunction<V> = V extends any[]
+  ? { [K in keyof V]: SettingFunction<V[K]> }
+  : (v: V) => V;
+
 type SetOverFunc<V, R, P> = P extends undefined
-  ? <S extends R>(s: S, f: (v: V) => V) => S
-  : <S extends R, PRM extends P>(s: S, f: (v: V) => V, param: PRM) => S;
+  ? <S extends R>(s: S, f: SettingFunction<V>) => S
+  : <S extends R, PRM extends P>(s: S, f: SettingFunction<V>, param: PRM) => S;
 
 export interface SetOver<V, R, P> {
   setOver: SetOverFunc<V, R, P>;
   setOverTransient: SetOverFunc<V, R, P>;
 }
 
-export interface Lens<F, VT extends ValueType, V, CV, R, P = undefined>
-  extends View<CV, R, P>,
-    ViewOver<V, R, P>,
-    Set<CV, R, P>,
-    SetOver<V, R, P> {
+export interface Lens<
+  F extends Focus,
+  VT extends ValueTypeArray,
+  V,
+  CV,
+  R,
+  P = undefined
+> extends View<CV, R, P>, ViewOver<V, R, P>, Set<CV, R, P>, SetOver<V, R, P> {
   focus: F;
   valueType: VT;
   subFocus?: SubFocusGenerator<VT, P>;
@@ -120,10 +137,9 @@ export function lens<V>(): any {
     focus,
     valueType,
     subFocus,
-    view: <S extends Target<F, VT, V>>(s: S, param?: P): Value<VT, V> => {
+    view: <S extends Target<F, VT, V>>(s: S, param?: P): any => {
       switch (valueType) {
-        case ValueType.Simple:
-        case undefined: {
+        case ValueType.Simple: {
           const result: unknown = s[focus];
 
           return s ? (result as Value<VT, V>) : undefined;
@@ -158,7 +174,7 @@ export function lens<V>(): any {
         case ValueType.AssociativeArray: {
           if (s === undefined) return undefined;
 
-          if (subFocus === undefined) return s[focus as string];
+          if (subFocus === undefined) return s[(focus as any) as string];
 
           const obj = s[focus];
 
@@ -396,7 +412,7 @@ export function lens<V>(): any {
         case ValueType.Simple: {
           return {
             ...s,
-            [focus]: f(s[focus as string])
+            [focus]: f(s[focus as string] as V)
           };
         }
         case ValueType.Array: {
@@ -467,11 +483,7 @@ export function lens<V>(): any {
           return undefined;
       }
     },
-    setOverTransient: <S extends Target<F, VT, V>>(
-      s: S,
-      f: (v: V) => V,
-      param?: P
-    ): S => {
+    setOverTransient: (s: any, f: (v: V) => V, param?: P): any => {
       if (s === undefined) return s;
 
       switch (valueType) {
@@ -510,7 +522,7 @@ export function lens<V>(): any {
           if (subFocus === undefined) {
             const tempS = s;
             tempS[focus as string] = Object.fromEntries(
-              Object.entries(obj).map(([key, value]) => [key, f(value)])
+              Object.entries(obj).map(([key, value]) => [key, f(value as V)])
             );
             return tempS;
           }

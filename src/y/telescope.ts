@@ -1,6 +1,70 @@
 import produce from 'immer';
 import { Lens } from './lens';
-import { TelescopedValue, Target, ValueType } from '../z/target';
+import {
+  TelescopedValue,
+  Target,
+  ValueType,
+  ValueTypeArray,
+  Focus
+} from '../z/target';
+
+function getVw(vtarr): any {
+  const vws = vtarr.map(vt => {
+    if (Array.isArray(vt)) {
+      return getVw(vt);
+    }
+    switch (vt) {
+      case ValueType.Simple:
+      default:
+        return v => v;
+      case ValueType.Array:
+        return v => (trgt, lns, param): any => {
+          return trgt.map(value => v(value, lns, param));
+        };
+      case ValueType.AssociativeArray:
+        return appLns => (trgt, lns, val, param): void => {
+          Object.entries(trgt).forEach(([key, value]) => {
+            appLns(value, lns, val[key], param);
+          });
+        };
+    }
+  });
+
+  return v => (trgt, lns, param): any => {
+    return trgt.map((value, i) => vws[i](v)(value, lns, param));
+  };
+}
+
+function getSt(vtarr): any {
+  const vws = vtarr.map(vt => {
+    if (Array.isArray(vt)) {
+      return getSt(vt);
+    }
+    switch (vt) {
+      case ValueType.Simple:
+      default:
+        return appLns => appLns;
+      case ValueType.Array:
+        return appLns => (trgt, lns, val, param): void => {
+          trgt.forEach((value, j) => appLns(value, lns, val[j], param));
+        };
+
+      case ValueType.AssociativeArray:
+        return v => (trgt, lns, param): any => {
+          return Object.fromEntries(
+            Object.entries(trgt).map(([key, value]) => [
+              key,
+              v(value, lns, param)
+            ])
+          );
+        };
+    }
+  });
+
+  return v => (trgt, lns, param): any => {
+    return trgt.map((value, i) => vws[i](v)(value, lns, param));
+  };
+}
 
 export type TelescopedParam<P1, P2> = P1 extends undefined
   ? P2
@@ -9,15 +73,15 @@ export type TelescopedParam<P1, P2> = P1 extends undefined
   : P1 & P2;
 
 export function telescope<
-  F1 extends string,
-  VT1 extends ValueType,
+  F1 extends Focus,
+  VT1 extends ValueTypeArray,
   V1,
   CV1,
   R1,
   P1,
-  F2 extends string,
-  VT2 extends ValueType,
-  V2 extends Target<F1, VT1, V1>,
+  F2 extends Focus,
+  VT2 extends ValueTypeArray,
+  V2 extends F2 extends Focus[] ? Target<F1, VT1, V1>[] : Target<F1, VT1, V1>,
   CV2,
   R2,
   P2
@@ -173,24 +237,28 @@ export function telescope(...args): any {
     let applyView = applyViewBase;
 
     for (let j = i; j >= 0; j -= 1) {
-      switch (args[j].valueType) {
-        case ValueType.Array:
-          applyView = (v => (trgt, lns, param): any => {
-            return trgt.map(value => v(value, lns, param));
-          })(applyView);
-          break;
-        case ValueType.AssociativeArray:
-          applyView = (v => (trgt, lns, param): any => {
-            return Object.fromEntries(
-              Object.entries(trgt).map(([key, value]) => [
-                key,
-                v(value, lns, param)
-              ])
-            );
-          })(applyView);
-          break;
-        default:
-          break;
+      if (Array.isArray(args[j].valueType)) {
+        applyView = getVw(args[j].valueType)(applyView);
+      } else {
+        switch (args[j].valueType) {
+          case ValueType.Array:
+            applyView = (v => (trgt, lns, param): any => {
+              return trgt.map(value => v(value, lns, param));
+            })(applyView);
+            break;
+          case ValueType.AssociativeArray:
+            applyView = (v => (trgt, lns, param): any => {
+              return Object.fromEntries(
+                Object.entries(trgt).map(([key, value]) => [
+                  key,
+                  v(value, lns, param)
+                ])
+              );
+            })(applyView);
+            break;
+          default:
+            break;
+        }
       }
     }
     views.unshift(
@@ -206,21 +274,25 @@ export function telescope(...args): any {
   let applySet = applySetBase;
 
   for (let i = args.length - 2; i >= 0; i -= 1) {
-    switch (args[i].valueType) {
-      case ValueType.Array:
-        applySet = (appLns => (trgt, lns, val, param): void => {
-          trgt.forEach((value, j) => appLns(value, lns, val[j], param));
-        })(applySet);
-        break;
-      case ValueType.AssociativeArray:
-        applySet = (appLns => (trgt, lns, val, param): void => {
-          Object.entries(trgt).forEach(([key, value]) => {
-            appLns(value, lns, val[key], param);
-          });
-        })(applySet);
-        break;
-      default:
-        break;
+    if (Array.isArray(args[i].valueType)) {
+      applySet = getSt(args[i].valueType)(applySet);
+    } else {
+      switch (args[i].valueType) {
+        case ValueType.Array:
+          applySet = (appLns => (trgt, lns, val, param): void => {
+            trgt.forEach((value, j) => appLns(value, lns, val[j], param));
+          })(applySet);
+          break;
+        case ValueType.AssociativeArray:
+          applySet = (appLns => (trgt, lns, val, param): void => {
+            Object.entries(trgt).forEach(([key, value]) => {
+              appLns(value, lns, val[key], param);
+            });
+          })(applySet);
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -235,6 +307,15 @@ export function telescope(...args): any {
     },
     viewOver: (s, f, param?: any): any => {
       const viewOver = args.reduceRight((currentViewOver, lens): any => {
+        if (Array.isArray(lens.valueType)) {
+          return (trgt): any =>
+            lens.viewOver(
+              trgt,
+              lens.valueType.map(l => currentViewOver),
+              param
+            );
+        }
+
         return (trgt): any => lens.viewOver(trgt, currentViewOver, param);
       }, f);
 

@@ -30,7 +30,7 @@ export default class Lens<
     this.valueType = valueType;
   }
 
-  view<S extends Target<F, VT, V>>(s: S): Value<VT, V> {
+  view(s: any): Value<VT, V> {
     switch (this.valueType) {
       case ValueType.Simple: {
         const result: unknown = s[this.focus];
@@ -218,11 +218,7 @@ export default class Lens<
     }
   }
 
-  setOver<S extends Target<F, VT, V>>(
-    s: S,
-    f: (v: V) => V,
-    transient = false
-  ): S {
+  setOver(s: any, f: (v: V) => V, transient = false): any {
     if (s === undefined) return s;
 
     switch (this.valueType) {
@@ -285,7 +281,7 @@ export default class Lens<
           if (transient) {
             const tempS = s;
             tempS[this.focus as string] = Object.fromEntries(
-              Object.entries(obj).map(([key, value]) => [key, f(value)])
+              Object.entries(obj).map(([key, value]) => [key, f(value as V)])
             );
             return tempS;
           }
@@ -293,7 +289,7 @@ export default class Lens<
           return {
             ...s,
             [this.focus]: Object.fromEntries(
-              Object.entries(obj).map(([key, value]) => [key, f(value)])
+              Object.entries(obj).map(([key, value]) => [key, f(value as V)])
             )
           };
         }
