@@ -31,16 +31,22 @@
     ]
   },
   "settings": {
-    "import/extensions": [".js", ".ts"],
+    "import/extensions": [".ts"],
     "import/parsers": {
       "@typescript-eslint/parser": [".ts"]
     },
     "import/resolver": {
-      "node": { "extensions": [".js", ".ts"] },
+      "node": { "extensions": [".ts"] },
       "alias": {
         "map": [["~", "./src"]],
-        "extensions": [".js", ".ts"]
+        "extensions": [".ts"]
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": { "@typescript-eslint/recommended": "off" }
+    }
+  ]
 }

@@ -22,10 +22,13 @@ function getVw(vtarr): any {
           return trgt.map(value => v(value, lns, param));
         };
       case ValueType.AssociativeArray:
-        return appLns => (trgt, lns, val, param): void => {
-          Object.entries(trgt).forEach(([key, value]) => {
-            appLns(value, lns, val[key], param);
-          });
+        return v => (trgt, lns, param): any => {
+          return Object.fromEntries(
+            Object.entries(trgt).map(([key, value]) => [
+              key,
+              v(value, lns, param)
+            ])
+          );
         };
     }
   });
@@ -36,7 +39,7 @@ function getVw(vtarr): any {
 }
 
 function getSt(vtarr): any {
-  const vws = vtarr.map(vt => {
+  const vws = vtarr.map((vt, k) => {
     if (Array.isArray(vt)) {
       return getSt(vt);
     }
@@ -46,17 +49,14 @@ function getSt(vtarr): any {
         return appLns => appLns;
       case ValueType.Array:
         return appLns => (trgt, lns, val, param): void => {
-          trgt.forEach((value, j) => appLns(value, lns, val[j], param));
+          trgt.forEach((value, j) => appLns(value, lns, val[k], param));
         };
 
       case ValueType.AssociativeArray:
-        return v => (trgt, lns, param): any => {
-          return Object.fromEntries(
-            Object.entries(trgt).map(([key, value]) => [
-              key,
-              v(value, lns, param)
-            ])
-          );
+        return appLns => (trgt, lns, val, param): void => {
+          Object.entries(trgt).forEach(([key, value]) => {
+            appLns(value, lns, val[k], param);
+          });
         };
     }
   });
@@ -343,6 +343,15 @@ export function telescope(...args): any {
     },
     setOver: (s, f, param?): any => {
       const setOver = args.reduceRight((currentSetOver, lens): any => {
+        if (Array.isArray(lens.valueType)) {
+          return (trgt): any =>
+            lens.setOverTransient(
+              trgt,
+              lens.valueType.map(l => currentSetOver),
+              param
+            );
+        }
+
         return (trgt): any =>
           lens.setOverTransient(trgt, currentSetOver, param);
       }, f);
@@ -351,6 +360,15 @@ export function telescope(...args): any {
     },
     setOverTransient: (s, f, param?): any => {
       const setOver = args.reduceRight((currentSetOver, lens): any => {
+        if (Array.isArray(lens.valueType)) {
+          return (trgt): any =>
+            lens.setOverTransient(
+              trgt,
+              lens.valueType.map(l => currentSetOver),
+              param
+            );
+        }
+
         return (trgt): any =>
           lens.setOverTransient(trgt, currentSetOver, param);
       }, f);
