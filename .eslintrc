@@ -19,6 +19,7 @@
     "jest/globals": true
   },
   "rules": {
+    "import/prefer-default-export": "off",
     "no-sparse-arrays": "off",
     "linebreak-style": "off",
     "import/extensions": [

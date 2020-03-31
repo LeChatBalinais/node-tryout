@@ -1,7 +1,5 @@
-import { array } from '../y/array';
-import { lens } from '../y/lens';
-import { ValueType } from '../z/target';
-import { telescope } from '../y/telescope';
+import { lens, array, telescope } from '../optics';
+import { ValueType } from '../optics/enums';
 
 describe('Simple Array', () => {
   const a = lens<number>()('a');
@@ -16,10 +14,10 @@ describe('Simple Array', () => {
   test('viewOver returns expected value', () => {
     let accum = '';
     ar.viewOver({ a: 1, b: 'one' }, [
-      (v: number) => {
+      (v: number): void => {
         accum += v.toString();
       },
-      (v: string) => {
+      (v: string): void => {
         accum += v;
       }
     ]);
@@ -41,8 +39,8 @@ describe('Simple Array', () => {
   test('setOver returns expected value', () => {
     expect(
       ar.setOver({ a: 1, b: 'one' }, [
-        (v: number) => v + 1,
-        (v: string) => v.toUpperCase()
+        (v: number): number => v + 1,
+        (v: string): string => v.toUpperCase()
       ])
     ).toEqual({ a: 2, b: 'ONE' });
   });
@@ -51,8 +49,8 @@ describe('Simple Array', () => {
     const s = { a: 1, b: 'one' };
 
     ar.setOverTransient(s, [
-      (v: number) => v + 1,
-      (v: string) => v.toUpperCase()
+      (v: number): number => v + 1,
+      (v: string): string => v.toUpperCase()
     ]);
 
     expect(s).toEqual({ a: 2, b: 'ONE' });
@@ -87,10 +85,10 @@ describe('Simple Array with Params', () => {
     ar.viewOver(
       { a: [0, 1], b: { one: 'oneVal', two: 'twoVal' } },
       [
-        (v: number) => {
+        (v: number): void => {
           accum += v.toString();
         },
-        (v: string) => {
+        (v: string): void => {
           accum += v;
         }
       ],
@@ -254,8 +252,11 @@ describe('Nested Array with Params', () => {
       abcd.setOver(
         s,
         [
-          [(v: number) => v + 1, (v: string) => v.toUpperCase()],
-          [(v: number) => v + 1, (v: string) => v.toUpperCase()]
+          [
+            (v: number): number => v + 1,
+            (v: string): string => v.toUpperCase()
+          ],
+          [(v: number): number => v + 1, (v: string): string => v.toUpperCase()]
         ],
         {
           ap: 0,
@@ -281,8 +282,8 @@ describe('Nested Array with Params', () => {
     abcd.setOverTransient(
       s,
       [
-        [(v: number) => v + 10, (v: string) => v.toLowerCase()],
-        [(v: number) => v + 10, (v: string) => v.toLowerCase()]
+        [(v: number): number => v + 10, (v: string): string => v.toLowerCase()],
+        [(v: number): number => v + 10, (v: string): string => v.toLowerCase()]
       ],
       {
         ap: 0,
@@ -295,5 +296,85 @@ describe('Nested Array with Params', () => {
       c: 19,
       d: 'deviat'
     });
+  });
+});
+
+describe('Telescoped Array with Params', () => {
+  interface A {
+    v: number;
+  }
+
+  interface B {
+    v: number;
+    w: string;
+  }
+
+  function* keyGenA({ ap }: { ap: number }) {
+    yield ap;
+  }
+
+  function* keyGenB({ bp }: { bp: string }) {
+    yield bp;
+  }
+
+  const a = lens<A>()('a', ValueType.Array, keyGenA);
+  const b = lens<B>()('b', ValueType.AssociativeArray, keyGenB);
+
+  const v = lens<number>()('v');
+  // const w = lens<string>()('w');
+
+  const ab = array(a, b);
+
+  const t = telescope(ab, v);
+
+  test('View returns expected value', () => {
+    expect(
+      t.view(
+        { a: [{ v: 3 }], b: { one: { v: 4, w: '4' } } },
+        { ap: 0, bp: 'one' }
+      )
+    ).toEqual([[3], { one: 4 }]);
+  });
+
+  test('ViewOver returns expected value', () => {
+    let sum = 0;
+
+    t.viewOver(
+      { a: [{ v: 3 }], b: { one: { v: 4, w: '4' } } },
+      (hr: number): void => {
+        sum += hr;
+      },
+      {
+        ap: 0,
+        bp: 'one'
+      }
+    );
+    expect(sum).toEqual(7);
+  });
+
+  test('Set returns expected value', () => {
+    expect(
+      t.set(
+        { a: [{ v: 3 }], b: { one: { v: 4, w: '4' } } },
+        [[4], { one: 5 }],
+        {
+          ap: 0,
+          bp: 'one'
+        }
+      )
+    ).toEqual({ a: [{ v: 4 }], b: { one: { v: 5, w: '4' } } });
+  });
+
+  test('SetOver returns expected value', () => {
+    expect(
+      t.setOver(
+        { a: [{ v: 3 }], b: { one: { v: 4, w: '4' } } },
+        (vv: number): number => vv + 4,
+        {
+          ap: 0,
+          bp: 'one'
+        }
+      )
+    ).toEqual({ a: [{ v: 7 }], b: { one: { v: 8, w: '4' } } });
   });
 });

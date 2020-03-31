@@ -1,6 +1,5 @@
-import { ValueType } from '../z/target';
-import { lens } from '../y/lens';
-import { telescope } from '../y/telescope';
+import { lens, telescope } from '../optics';
+import { ValueType } from '../optics/enums';
 
 describe('Telescope', () => {
   interface C {
