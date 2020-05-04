@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import produce from 'immer';
+import { createSelector } from 'reselect';
 
 export function lens() {
   return (focus, valueType = 0, subFocus = undefined) => ({
@@ -73,7 +74,7 @@ export function lens() {
           const arr = s[focus];
 
           if (subFocus === undefined) {
-            arr.map(el => f(el));
+            arr.map((el) => f(el));
             break;
           }
 
@@ -94,7 +95,7 @@ export function lens() {
           const obj = s[focus];
 
           if (subFocus === undefined) {
-            Object.values(obj).forEach(value => {
+            Object.values(obj).forEach((value) => {
               f(value);
             });
             break;
@@ -135,7 +136,7 @@ export function lens() {
 
           let arr = s[focus];
 
-          arr = produce(arr, arrDraft => {
+          arr = produce(arr, (arrDraft) => {
             const arrDraftC = arrDraft;
             let key = it.next();
 
@@ -158,7 +159,7 @@ export function lens() {
 
           let obj = s[focus];
 
-          obj = produce(obj, objDraft => {
+          obj = produce(obj, (objDraft) => {
             const objDraftC = objDraft;
             let key = it.next();
 
@@ -237,7 +238,7 @@ export function lens() {
         case 0: {
           return {
             ...s,
-            [focus]: f(s[focus])
+            [focus]: f(s[focus]),
           };
         }
         case 1: {
@@ -245,7 +246,7 @@ export function lens() {
           if (subFocus === undefined) {
             return {
               ...s,
-              [focus]: arr.map(el => f(el))
+              [focus]: arr.map((el) => f(el)),
             };
           }
 
@@ -256,7 +257,7 @@ export function lens() {
 
           return {
             ...s,
-            [focus]: produce(arr, arrDraft => {
+            [focus]: produce(arr, (arrDraft) => {
               let key = it.next();
               const tempArrDraft = arrDraft;
 
@@ -264,7 +265,7 @@ export function lens() {
                 tempArrDraft[key.value] = f(arrDraft[key.value]);
                 key = it.next();
               }
-            })
+            }),
           };
         }
         case 2: {
@@ -274,7 +275,7 @@ export function lens() {
               ...s,
               [focus]: Object.fromEntries(
                 Object.entries(obj).map(([key, value]) => [key, f(value)])
-              )
+              ),
             };
           }
 
@@ -283,7 +284,7 @@ export function lens() {
           if (param === undefined) it = subFocus();
           else it = subFocus(param);
 
-          obj = produce(obj, objDraft => {
+          obj = produce(obj, (objDraft) => {
             const objDraftC = objDraft;
             let key = it.next();
 
@@ -311,7 +312,7 @@ export function lens() {
           const arr = s[focus];
           if (subFocus === undefined) {
             const tempS = s;
-            tempS[focus] = arr.map(el => f(el));
+            tempS[focus] = arr.map((el) => f(el));
             return tempS;
           }
 
@@ -354,36 +355,36 @@ export function lens() {
         default:
           return undefined;
       }
-    }
+    },
   });
 }
 
 function getVw(vtarr) {
-  const vws = vtarr.map(vt => {
+  const vws = vtarr.map((vt) => {
     if (Array.isArray(vt)) {
       return getVw(vt);
     }
     switch (vt) {
       case 0: // ValueType.Simple
       default:
-        return v => v;
+        return (v) => v;
       case 1: // ValueType.Array
-        return v => (trgt, lns, param) => {
-          return trgt.map(value => v(value, lns, param));
+        return (v) => (trgt, lns, param) => {
+          return trgt.map((value) => v(value, lns, param));
         };
       case 2: // ValueType.AssociativeArray
-        return v => (trgt, lns, param) => {
+        return (v) => (trgt, lns, param) => {
           return Object.fromEntries(
             Object.entries(trgt).map(([key, value]) => [
               key,
-              v(value, lns, param)
+              v(value, lns, param),
             ])
           );
         };
     }
   });
 
-  return v => (trgt, lns, param) => {
+  return (v) => (trgt, lns, param) => {
     return trgt.map((value, i) => vws[i](v)(value, lns, param));
   };
 }
@@ -396,14 +397,14 @@ function getSt(vtarr) {
     switch (vt) {
       case 0: // ValueType.Simple
       default:
-        return appLns => appLns;
+        return (appLns) => appLns;
       case 1: // ValueType.Array
-        return appLns => (trgt, lns, val, param) => {
+        return (appLns) => (trgt, lns, val, param) => {
           trgt.forEach((value, j) => appLns(value, lns, val[k][j], param));
         };
 
       case 2: // ValueType.AssociativeArray
-        return appLns => (trgt, lns, val, param) => {
+        return (appLns) => (trgt, lns, val, param) => {
           Object.entries(trgt).forEach(([j, value]) => {
             appLns(value, lns, val[k][j], param);
           });
@@ -411,7 +412,7 @@ function getSt(vtarr) {
     }
   });
 
-  return v => (trgt, lns, param) => {
+  return (v) => (trgt, lns, param) => {
     return trgt.map((value, i) => vws[i](v)(value, lns, param));
   };
 }
@@ -432,16 +433,16 @@ export function telescope(...args) {
       } else {
         switch (args[j].valueType) {
           case 1: // ValueType.Array
-            applyView = (v => (trgt, lns, param) => {
-              return trgt.map(value => v(value, lns, param));
+            applyView = ((v) => (trgt, lns, param) => {
+              return trgt.map((value) => v(value, lns, param));
             })(applyView);
             break;
           case 2: // ValueType.AssociativeArray
-            applyView = (v => (trgt, lns, param) => {
+            applyView = ((v) => (trgt, lns, param) => {
               return Object.fromEntries(
                 Object.entries(trgt).map(([key, value]) => [
                   key,
-                  v(value, lns, param)
+                  v(value, lns, param),
                 ])
               );
             })(applyView);
@@ -469,14 +470,14 @@ export function telescope(...args) {
     } else {
       switch (args[i].valueType) {
         case 1: // ValueType.Array
-          applySet = (appLns => (trgt, lns, val, param) => {
+          applySet = ((appLns) => (trgt, lns, val, param) => {
             trgt.forEach((value, j) => {
               appLns(value, lns, val[j], param);
             });
           })(applySet);
           break;
         case 2: // ValueType.AssociativeArray
-          applySet = (appLns => (trgt, lns, val, param) => {
+          applySet = ((appLns) => (trgt, lns, val, param) => {
             Object.entries(trgt).forEach(([key, value]) => {
               appLns(value, lns, val[key], param);
             });
@@ -500,21 +501,21 @@ export function telescope(...args) {
     viewOver: (s, f, param) => {
       const viewOver = args.reduceRight((currentViewOver, lns) => {
         if (Array.isArray(lns.valueType)) {
-          return trgt =>
+          return (trgt) =>
             lns.viewOver(
               trgt,
-              lns.valueType.map(l => currentViewOver),
+              lns.valueType.map(() => currentViewOver),
               param
             );
         }
 
-        return trgt => lns.viewOver(trgt, currentViewOver, param);
+        return (trgt) => lns.viewOver(trgt, currentViewOver, param);
       }, f);
 
       viewOver(s);
     },
     set: (s, v, param) => {
-      return produce(s, draftS => {
+      return produce(s, (draftS) => {
         let focusedTrgt = draftS;
 
         for (let i = 0; i < args.length - 1; i += 1) {
@@ -536,50 +537,50 @@ export function telescope(...args) {
     setOver: (s, f, param) => {
       const setOver = args.reduceRight((currentSetOver, lns) => {
         if (Array.isArray(lns.valueType)) {
-          return trgt =>
+          return (trgt) =>
             lns.setOverTransient(
               trgt,
-              lns.valueType.map(l => currentSetOver),
+              lns.valueType.map(() => currentSetOver),
               param
             );
         }
 
-        return trgt => lns.setOverTransient(trgt, currentSetOver, param);
+        return (trgt) => lns.setOverTransient(trgt, currentSetOver, param);
       }, f);
 
-      return produce(s, draftS => setOver(draftS));
+      return produce(s, (draftS) => setOver(draftS));
     },
     setOverTransient: (s, f, param) => {
       const setOver = args.reduceRight((currentSetOver, lns) => {
         if (Array.isArray(lns.valueType)) {
-          return trgt =>
+          return (trgt) =>
             lns.setOverTransient(
               trgt,
-              lns.valueType.map(l => currentSetOver),
+              lns.valueType.map(() => currentSetOver),
               param
             );
         }
 
-        return trgt => lns.setOverTransient(trgt, currentSetOver, param);
+        return (trgt) => lns.setOverTransient(trgt, currentSetOver, param);
       }, f);
 
       setOver(s);
 
       return s;
-    }
+    },
   };
 }
 
 export function array(...args) {
   return {
-    focus: args.map(arg => arg.focus),
-    valueType: args.map(arg => arg.valueType),
-    view: (s, param) => args.map(arg => arg.view(s, param)),
+    focus: args.map((arg) => arg.focus),
+    valueType: args.map((arg) => arg.valueType),
+    view: (s, param) => args.map((arg) => arg.view(s, param)),
     viewOver: (s, f, param) => {
       args.forEach((arg, i) => arg.viewOver(s, f[i], param));
     },
     set: (s, v, param) =>
-      produce(s, draftS => {
+      produce(s, (draftS) => {
         args.forEach((arg, i) => {
           arg.setTransient(draftS, v[i], param);
         });
@@ -590,7 +591,7 @@ export function array(...args) {
       });
     },
     setOver: (s, f, param) =>
-      produce(s, draftS => {
+      produce(s, (draftS) => {
         args.forEach((arg, i) => {
           arg.setOverTransient(draftS, f[i], param);
         });
@@ -599,18 +600,22 @@ export function array(...args) {
       args.forEach((arg, i) => {
         arg.setOverTransient(s, f[i], param);
       });
-    }
+    },
   };
 }
 
+export function fiber(l, r, c) {
+  return { lens: l, rule: r, condition: c };
+}
+
 export function opticalReducer(...args) {
-  const lenses = args.map(val => val[0]);
+  const lenses = args.map((val) => val.lens);
 
   const lensArray = array(...lenses);
 
-  return s => {
-    const functions = args.map(val => v =>
-      val[2] && !val[2](s, v) ? v : val[1](s, v)
+  return (s) => {
+    const functions = args.map((val) => (v) =>
+      val.condition && !val.condition(s, v) ? v : val.rule(s, v)
     );
 
     return lensArray.setOver(s, functions, s);
@@ -623,11 +628,41 @@ export function rule(...args) {
   }
 
   if (args[0].length === args[1].length)
-    return (s, v) => args[1](...args[0].map(g => g(s, s)));
+    return (s) => args[1](...args[0].map((g) => g(s, s)));
 
-  return (s, v) => args[1](...args[0].map(g => g(s, s)), v);
+  return (s, v) => args[1](...args[0].map((g) => g(s, s)), v);
 }
 
 export function condition(...args) {
   return rule(...args);
+}
+
+export function actionReducer(actionID, reducer) {
+  return {
+    [actionID]: (state, action) =>
+      reducer({ actionPayload: action.payload, state }),
+  };
+}
+
+export function inState(l) {
+  return telescope(lens()('state'), l);
+}
+
+export function inPayload(l) {
+  return telescope(lens()('payload'), l);
+}
+
+export function selector(...args) {
+  return createSelector(
+    args[0].map((g) => (s) => g(s, s)),
+    args[1]
+  );
+}
+
+export function acitonReducer(actionID, reducer) {
+  return {
+    [actionID]: (state, action) => {
+      return reducer({ state, payload: action.payload }).state;
+    },
+  };
 }

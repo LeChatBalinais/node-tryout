@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "server example",
   "dependencies": {
-    "immer": "^5.2.1"
+    "immer": "^5.2.1",
+    "reselect": "^4.0.0"
   },
   "scripts": {
     "start": "concurrently --kill-others --names \"tsc,node\" -c \"blue,green\" \"yarn run type-check:watch\"  \"yarn nodemon --verbose --exec babel-node --extensions \".js,.ts\" src/app.ts\"",
